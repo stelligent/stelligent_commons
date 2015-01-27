@@ -32,6 +32,7 @@ class VpcCfnGenerator
     emit_public_subnets vpc_description
     emit_natted_subnets vpc_description
     emit_private_subnets vpc_description
+    emit_bastion vpc_description
   end
 
   def define_nat_sg_rules(vpc_description)
@@ -49,11 +50,12 @@ class VpcCfnGenerator
   end
 
   def define_bastion_sg_rules(vpc_description)
-    @bastion_ingress_rules = allowed_ssh_source_ips.map do |ip|
+    @bastion_ingress_rules = vpc_description.allowed_ssh_source_ips.map do |ip|
       {:port_range=>22..22, :protocol=>:tcp, :cidr_ip=>"#{ip}/32"}
     end
 
     @bastion_egress_rules = [
+      {:port_range=>22..22, :protocol=>:tcp, :cidr_ip=>vpc_description.cidr_block},
       {:port_range=>80..80, :protocol=>:tcp, :cidr_ip=>'0.0.0.0/0'},
       {:port_range=>443..443, :protocol=>:tcp, :cidr_ip=>'0.0.0.0/0'},
       {:port_range=>11371..11371, :protocol=>:tcp, :cidr_ip=>'0.0.0.0/0'}
@@ -177,6 +179,19 @@ class VpcCfnGenerator
     }
   end
 
+  def bastion_security_group(vpc_description)
+    {
+      'DependsOn' => %w{VPC},
+      'Type' => 'AWS::EC2::SecurityGroup',
+      'Properties' => {
+        'GroupDescription' => 'Bastion Security Group',
+        'VpcId' => ref('VPC'),
+        'SecurityGroupIngress' => ip_permissions(@bastion_ingress_rules),
+        'SecurityGroupEgress' => ip_permissions(@bastion_egress_rules)
+      }
+    }
+  end
+
   def ip_permissions(permissions)
     permissions.map do |permission|
       {
@@ -234,7 +249,7 @@ class VpcCfnGenerator
         'Properties' =>  {
           'InstanceType' => vpc_description.bastion_instance_type,
           'KeyName' =>  vpc_description.bastion_key_pair_name,
-          'ImageId' => vpc_description.bastion_image_id,
+          'ImageId' => vpc_description.bastion_ami,
           'SecurityGroupIds' => [ref('BastionSecurityGroup')],
           'SubnetId' => ref('PublicSubnet0')
         }

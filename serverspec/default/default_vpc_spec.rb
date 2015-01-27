@@ -77,21 +77,24 @@ describe 'the default network' do
 
     its(:nats) {
       should all have_egress_rules [
-        {:port_range=>80..80, :protocol=>:any, :ip_ranges=>%w{0.0.0.0/0}},
-        {:port_range=>443..443, :protocol=>:any, :ip_ranges=>%w{0.0.0.0/0}},
-        {:port_range=>11371..11371, :protocol=>:any, :ip_ranges=>%w{0.0.0.0/0}}
+        {:port_range=>80..80, :protocol=>:tcp, :ip_ranges=>%w{0.0.0.0/0}},
+        {:port_range=>443..443, :protocol=>:tcp, :ip_ranges=>%w{0.0.0.0/0}},
+        {:port_range=>11371..11371, :protocol=>:tcp, :ip_ranges=>%w{0.0.0.0/0}}
       ]
     }
   end
 
   describe vpc(vpc_id), :bastion do
-    its(:public_ec2_instances) { should have_exactly(1).instance }
-    its(:public_ec2_instances) {
+    its(:public_non_nat_ec2_instances) { should have_exactly(1).instance }
+    its(:public_non_nat_ec2_instances) {
       should all have_ingress_rules [
-                                      {:port_range=>22..22, :protocol=>:any, :ip_ranges=>ip_addresses_with_bastion_access}
+                                      {:port_range=>22..22, :protocol=>:tcp, :ip_ranges=>ip_addresses_with_bastion_access.map{|ip| "#{ip}/32"}}
                                     ]
       should all have_egress_rules [
-                                     {:port_range=>22..22, :protocol=>:any, :ip_ranges=>%w{192.168.0.0/16}}
+                                     {:port_range=>22..22, :protocol=>:tcp, :ip_ranges=>%w{192.168.0.0/16}},
+                                     {:port_range=>80..80, :protocol=>:tcp, :ip_ranges=>%w{0.0.0.0/0}},
+                                     {:port_range=>443..443, :protocol=>:tcp, :ip_ranges=>%w{0.0.0.0/0}},
+                                     {:port_range=>11371..11371, :protocol=>:tcp, :ip_ranges=>%w{0.0.0.0/0}}
                                    ]
     }
   end

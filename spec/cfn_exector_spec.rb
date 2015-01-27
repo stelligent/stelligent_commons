@@ -20,7 +20,7 @@ describe 'end-to-end test' do
     vpc_description.nat_instance_type = 't2.small'
 
     vpc_description.bastion_key_pair_name = 'bastion_keypair'
-    vpc_description.bastion_instance_type = 'm1.small'
+    vpc_description.bastion_instance_type = 't2.small'
     vpc_description.bastion_ami = 'ami-b66ed3de'
     vpc_description.allowed_ssh_source_ips = %w{50.190.124.124}
 
