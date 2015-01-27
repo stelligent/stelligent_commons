@@ -4,7 +4,7 @@ vpc_id = ENV['VPC_ID']
 
 ip_addresses_with_bastion_access = ENV['BASTION_INGRESS'].split(',')
 
-describe 'the default network' do
+describe 'the default network', :default do
 
   describe vpc(vpc_id), :basics do
     it { should be_default_tenancy }
@@ -99,15 +99,3 @@ describe 'the default network' do
     }
   end
 end
-
-describe 'default network with OpenVPN access server' do
-
-end
-
-# describe 'default network with VPN connection through Virtual Private Gateway' do
-#   describe vpc(vpc_id), :vpg do
-#     its(:virtual_private_gateway) { should have_name('something_something') }
-#   end
-# end
-
-#anything with peering?

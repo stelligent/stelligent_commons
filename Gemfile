@@ -1,7 +1,10 @@
 source 'http://rubygems.org'
 
-gem 'rspec'
 gem 'aws-sdk'
-gem 'serverspec'
-gem 'serverspec-aws-resources', :github => 'stelligent/serverspec-aws-resources'
+
+group :test do
+  gem 'rspec'
+  gem 'serverspec'
+  gem 'serverspec-aws-resources', :github => 'stelligent/serverspec-aws-resources'
+end
 

@@ -75,8 +75,6 @@ class VpcCfnGenerator
     { 'Ref' => name }
   end
 
-
-
   def emit_nat_eip
     @cfn_template['Resources']['NATIPAddress'] = {
       'Type' => 'AWS::EC2::EIP',
@@ -279,7 +277,7 @@ class VpcCfnGenerator
         'Properties' => {
           'VpcId' => ref('VPC'),
           'CidrBlock' => subnet[:cidr_block],
-          'AvailabilityZone' => pick_az(subnet_index)
+          'AvailabilityZone' => pick_az(vpc_description, subnet_index)
         }
       }
 
@@ -305,12 +303,8 @@ class VpcCfnGenerator
     end
   end
 
-  def subnets
-    %w{us-east-1b us-east-1c us-east-1d us-east-1e}
-  end
-
-  def pick_az(subnet_index)
-    subnets[subnet_index % subnets.size]
+  def pick_az(vpc_description, subnet_index)
+    vpc_description.azs_to_distribute_across[subnet_index % vpc_description.azs_to_distribute_across.size]
   end
 
   def emit_public_subnets(vpc_description)
@@ -320,7 +314,7 @@ class VpcCfnGenerator
         'Properties' => {
           'VpcId' => ref('VPC'),
           'CidrBlock' => subnet[:cidr_block],
-          'AvailabilityZone' => pick_az(subnet_index)
+          'AvailabilityZone' => pick_az(vpc_description, subnet_index)
         }
       }
 
@@ -423,7 +417,7 @@ class VpcCfnGenerator
         'Properties' => {
           'VpcId' => ref('VPC'),
           'CidrBlock' => subnet[:cidr_block],
-          'AvailabilityZone' => pick_az(subnet_index)
+          'AvailabilityZone' => pick_az(vpc_description, subnet_index)
         }
       }
 
