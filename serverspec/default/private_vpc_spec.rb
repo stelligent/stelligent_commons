@@ -1,8 +1,9 @@
 require_relative 'spec_helper'
 
-vpc_id = ENV['VPC_ID']
 
 describe 'private network with VPN connection through Virtual Private Gateway', :private do
+
+  vpc_id = ENV['VPC_ID']
 
   describe vpc(vpc_id), :vpg do
     its(:virtual_private_gateway) { should have_name('dummygw') }

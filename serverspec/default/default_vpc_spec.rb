@@ -1,10 +1,8 @@
 require_relative 'spec_helper'
 
-vpc_id = ENV['VPC_ID']
-
-ip_addresses_with_bastion_access = ENV['BASTION_INGRESS'].split(',')
-
 describe 'the default network', :default do
+
+  vpc_id = ENV['VPC_ID']
 
   describe vpc(vpc_id), :basics do
     it { should be_default_tenancy }
@@ -87,6 +85,9 @@ describe 'the default network', :default do
   describe vpc(vpc_id), :bastion do
     its(:public_non_nat_ec2_instances) { should have_exactly(1).instance }
     its(:public_non_nat_ec2_instances) {
+      ENV['BASTION_INGRESS'].should_not eq nil
+      ip_addresses_with_bastion_access = ENV['BASTION_INGRESS'].split(',')
+
       should all have_ingress_rules [
                                       {:port_range=>22..22, :protocol=>:tcp, :ip_ranges=>ip_addresses_with_bastion_access.map{|ip| "#{ip}/32"}}
                                     ]

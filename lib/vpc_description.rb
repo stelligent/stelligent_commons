@@ -21,19 +21,23 @@ class VpcDescription
 
   attr_reader :vpn_gateway_name
 
-  attr_accessor :private_subnets, :public_subnets, :natted_subnets
+  attr_reader :private_subnets, :natted_subnets
 
-  def add_vpg(vpn_gateway_name:)
-    deny_nil(vpn_gateway_name)
+  attr_accessor  :public_subnets
+
+  def add_vpg(vpn_gateway_name:, private_subnets:)
+    deny_nil(vpn_gateway_name, private_subnets)
 
     @vpn_gateway_name = vpn_gateway_name
+    @private_subnets = private_subnets
   end
 
-  def add_nat(nat_instance_type:, nat_key_pair_name:)
+  def add_nat(nat_instance_type:, nat_key_pair_name:, natted_subnets:)
     deny_nil(nat_instance_type, nat_key_pair_name)
 
     @nat_instance_type = nat_instance_type
     @nat_key_pair_name = nat_key_pair_name
+    @natted_subnets = natted_subnets
   end
 
   def add_bastion(bastion_ami:, allowed_ssh_source_ips:, bastion_key_pair_name:, bastion_instance_type:)

@@ -40,12 +40,13 @@ describe 'vpc_cfn_generator' do
       { cidr_block: '192.168.10.0/24'},
       { cidr_block: '192.168.11.0/24'}
     ]
-    @vpc_description.natted_subnets = [
-      { cidr_block: '192.168.20.0/24'},
-      { cidr_block: '192.168.21.0/24'}
-    ]
+
     @vpc_description.add_nat(nat_key_pair_name: 'nat_keypair',
-                             nat_instance_type: 'm1.small')
+                             nat_instance_type: 'm1.small',
+                             natted_subnets: [
+                               { cidr_block: '192.168.20.0/24'},
+                               { cidr_block: '192.168.21.0/24'}
+                             ])
 
     json_output = emit_json_output(@vpc_description)
 

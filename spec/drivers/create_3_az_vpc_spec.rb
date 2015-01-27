@@ -3,20 +3,22 @@ require 'vpc_cfn_generator'
 require 'cfn_executor'
 
 describe 'manual test driver'  do
-  it 'creates a default vpc', :default do
+  it 'creates a default vpc', :three_az do
     vpc_description = VpcDescription.new(cidr_block: '192.168.0.0/16',
-                                         azs_to_distribute_across: %w{us-east-1b us-east-1c})
+                                         azs_to_distribute_across: %w{us-east-1b us-east-1c us-east-1d})
 
     vpc_description.public_subnets = [
       { cidr_block: '192.168.10.0/24'},
-      { cidr_block: '192.168.11.0/24'}
+      { cidr_block: '192.168.11.0/24'},
+      { cidr_block: '192.168.12.0/24'}
     ]
 
     vpc_description.add_nat(nat_key_pair_name: 'nat_keypair',
                             nat_instance_type: 't2.small',
                             natted_subnets:[
                               { cidr_block: '192.168.20.0/24'},
-                              { cidr_block: '192.168.21.0/24'}
+                              { cidr_block: '192.168.21.0/24'},
+                              { cidr_block: '192.168.22.0/24'}
                             ])
 
     vpc_description.add_bastion(bastion_key_pair_name: 'bastion_keypair',
@@ -30,6 +32,6 @@ describe 'manual test driver'  do
     vpc_cfn_generator.emit vpc_description, output
     output.rewind
 
-    CloudFormationExecutor.new.execute 'basic-vpc', output
+    CloudFormationExecutor.new.execute '3az-vpc', output
   end
 end
