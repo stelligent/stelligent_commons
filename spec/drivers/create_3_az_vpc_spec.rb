@@ -32,6 +32,6 @@ describe 'manual test driver'  do
     vpc_cfn_generator.emit vpc_description, output
     output.rewind
 
-    CloudFormationExecutor.new.execute '3az-vpc', output
+    CloudFormationExecutor.new.execute 'three-az-vpc', output
   end
 end
