@@ -33,6 +33,6 @@ vpc_description.add_nat(nat_key_pair_name: 'nat_keypair',
 vpc_description.add_bastion(bastion_key_pair_name: 'bastion_keypair',
                             bastion_instance_type: 't2.small',
                             bastion_ami: 'ami-b66ed3de',
-                            allowed_ssh_source_ips: %w{50.190.124.124})
+                            allowed_ssh_source_ips: [opts[:ip_to_allow_to_bastion]])
 
 VpcCfnGenerator.new.emit vpc_description, $stdout
