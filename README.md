@@ -18,7 +18,8 @@ Prerequisites: Ruby/Bundler should be installed.
 
         bundle install
 
-2. Run one of the example scripts under the bin directory to generate a CloudFormation template:
+2. Run one of the example scripts under the bin directory to generate a CloudFormation template.  The name of the script
+   roughly reflects the type of VPC it is going to create.
 
         bin/generate_private_vpc > private_vpc_cfn_template.json
         bin/generate_3az_vpc --ip-to-allow-to-bastion xx.xx.xx.xx > 3az_vpc_cfn_template.json
@@ -36,6 +37,7 @@ without programming experience.
 To create a new script, one can use the examples in the bin directory as a starting point.  From here you can either add
 command line arguments or customize the VPC created as desired.  The basic flow of the script is:
 
+0. Elicit any command line arguments such as IP addresses of hosts that should be allowed ingress on port 22 to the bastion
 1. Construct a VpcDescription object
 
       This is where all the customizations will happen.  More subnets, less subnets, different masks, etc. Include
@@ -49,7 +51,7 @@ command line arguments or customize the VPC created as desired.  The basic flow 
 * would be good to add support for an OpenVPN server
 * setup HA NAT
 * setup HA OpenVPN
-* the implementation for VpcCfnGenerator is "brute force" at this point.  Perhaps interesting to decompose into a better dsl that better encapsulates some of the horrific hash building
+* the implementation for VpcCfnGenerator is "brute force" at this point.  Perhaps interesting to decompose into a better dsl that encapsulates some of the horrific hash building
 
 ## Testing the created VPC
 
@@ -58,7 +60,9 @@ used to specify the expectations.  For the three stock scripts, there are matchi
 under serverspec/default.
 
 To execute them, you must pass in the VPC_ID for all tests, and then BASTION_INGRESS except for the private VPC which has no bastion.
-The SPEC_OPTS setting will use tags to determine which test to run - so pick according to which script you have run.
+The SPEC_OPTS setting will use tags to determine which test to run - so pick the tag according to which script you have run previously.
+If you have yet to actually construct a VPC to test, these tests should fail pretty much across the board depending on
+what VPC_ID is specified.
 
     bundle install
     VPC_ID=vpc-xxxxx BASTION_INGRESS=xx.xx.xx.xx SPEC_OPTS="-t basic_two_az" bundle exec rake serverspec
