@@ -1,8 +1,25 @@
-require 'erb'
 require 'JSON'
 
+#
+# This object can generate a CloudFormation template for an AWS VPC
+# based upon customizing parameters in a VpcDescription object
+#
 class VpcCfnGenerator
 
+  #
+  # Emit the CloudFormation template based upon the given VpcDescription into
+  # the specified IO object.
+  #
+  # * *Args*    :
+  #   - ++ -> VpcDescription object
+  #   - ++ -> an IO object to write the template to like StringIO, etc.
+  #
+  # * *Returns* :
+  #   - the number of characters emitted
+  #
+  # * *Raises* :
+  #   - ++ -> nothing on purpose :)
+  #
   def emit(vpc_description, io)
     @cfn_template = Hash.new
 
