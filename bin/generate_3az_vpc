@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+
+require 'trollop'
+
+opts = Trollop::options do
+  opt :ip_to_allow_to_bastion, 'IP address of host to allow SSH access to the bastion', :type => :string, :required => true
+end
+
+
+$LOAD_PATH.unshift File.join(File.dirname(__FILE__), *%w[.. lib])
+
+require 'vpc_description'
+require 'vpc_cfn_generator'
+
+
+vpc_description = VpcDescription.new(cidr_block: '192.168.0.0/16',
+                                     azs_to_distribute_across: %w{us-east-1b us-east-1c us-east-1d})
+
+vpc_description.public_subnets = [
+  { cidr_block: '192.168.10.0/24'},
+  { cidr_block: '192.168.11.0/24'},
+  { cidr_block: '192.168.12.0/24'}
+]
+
+vpc_description.add_nat(nat_key_pair_name: 'nat_keypair',
+                        nat_instance_type: 't2.small',
+                        natted_subnets:[
+                          { cidr_block: '192.168.20.0/24'},
+                          { cidr_block: '192.168.21.0/24'},
+                          { cidr_block: '192.168.22.0/24'}
+                        ])
+
+vpc_description.add_bastion(bastion_key_pair_name: 'bastion_keypair',
+                            bastion_instance_type: 't2.small',
+                            bastion_ami: 'ami-b66ed3de',
+                            allowed_ssh_source_ips: %w{50.190.124.124})
+
+VpcCfnGenerator.new.emit vpc_description, $stdout

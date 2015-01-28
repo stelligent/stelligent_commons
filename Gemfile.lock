@@ -44,6 +44,7 @@ GEM
     specinfra (2.11.10)
       net-scp
       net-ssh
+    trollop (2.1.1)
 
 PLATFORMS
   ruby
@@ -53,3 +54,4 @@ DEPENDENCIES
   rspec
   serverspec
   serverspec-aws-resources!
+  trollop
