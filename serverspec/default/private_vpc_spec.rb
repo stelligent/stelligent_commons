@@ -32,6 +32,8 @@ describe 'private network with VPN connection through Virtual Private Gateway', 
     it { should_not be_attached_to_an_internet_gateway }
 
     it { should be_attached_to_an_virtual_private_gateway }
+
+    its(:virtual_private_gateway) { should have_name('dummygw')}
   end
 
   describe vpc(vpc_id), :subnets_and_routing do
