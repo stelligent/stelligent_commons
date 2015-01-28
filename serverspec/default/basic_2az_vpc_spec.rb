@@ -1,6 +1,6 @@
 require_relative 'spec_helper'
 
-describe 'the default network', :default do
+describe 'the default network', :basic_two_az do
 
   vpc_id = ENV['VPC_ID']
 

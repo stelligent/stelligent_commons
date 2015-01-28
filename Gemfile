@@ -7,5 +7,6 @@ group :test do
   gem 'rspec'
   gem 'serverspec'
   gem 'serverspec-aws-resources', :github => 'stelligent/serverspec-aws-resources'
+  gem 'rspec-collection_matchers'
 end
 
