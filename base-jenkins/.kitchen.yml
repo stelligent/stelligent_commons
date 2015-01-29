@@ -1,0 +1,30 @@
+---
+driver:
+  name: vagrant
+
+provisioner:
+  name: chef_solo
+
+platforms:
+  - name: ubuntu-14.04
+
+suites:
+  - name: default
+    run_list:
+      - build-essential
+      - jenkins::master
+      - jenkins-configuration
+    attributes:
+      jenkins_git:
+        username: jenkins_git_user
+        email: jenkins@nowhere.com
+      jenkins:
+        version: "1.598"
+        install_method: package
+        cert_subject: "/CN=www.somebody.com/O=someorg/C=US/ST=MD/L=somecity"
+        server:
+          plugins:
+            - name: scripttrigger
+              version: "0.28"
+
+
