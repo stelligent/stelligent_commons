@@ -30,9 +30,14 @@ Prerequisites: Ruby/Bundler should be installed.
 ## Customizing the created VPC
 
 The VpcCfnGenerator is meant to be flexible enough (at the cost of a fair amount of complexity and over-engineering!?!??) to create a variety of different
-VPC configurations, but this is meant more for a developer to use instead of an "end user".  Calls to VpcCfnGenerator
+VPC configurations.  The typical customization will be to set the cidr blocks and to decide how many subnets of each type to
+create (public, natt-ed, private).
+
+The basic tool is meant more for a developer to use instead of an "end user", but calls to VpcCfnGenerator
 should be wrapped up in a one-click script that can be incorporated into a deployment pipeline or just used by an arbitrary person
 without programming experience.
+
+It would also be possible to make an elaborate CLI interface to exercise the API if desired.
 
 To create a new script, one can use the examples in the bin directory as a starting point.  From here you can either add
 command line arguments or customize the VPC created as desired.  The basic flow of the script is:
