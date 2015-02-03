@@ -12,7 +12,7 @@ Scripts and other utilities we commonly use at Stelligent
 
 ## Basic Usage to create a VPC
 
-Prerequisites: Ruby/Bundler should be installed.
+Prerequisites: Ruby 2.1 with Bundler should be installed.
 
 1. From the stelligent_commons root directory, run:
 
