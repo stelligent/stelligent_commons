@@ -26,7 +26,7 @@ vagrant plugin install vagrant-omnibus
 Clone the repo
 
 ```
-git clone git@github.com:stelligent/local_dev_box.git
+git clone git@github.com:stelligent/stelligent_commons.git
 ```
 
 Navigate into the dev-box-generation.
