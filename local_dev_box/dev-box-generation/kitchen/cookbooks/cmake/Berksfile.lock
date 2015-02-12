@@ -1,0 +1,15 @@
+DEPENDENCIES
+  apt
+  build-essential
+  cmake
+    path: .
+    metadata: true
+  minitest-handler
+
+GRAPH
+  apt (2.4.0)
+  build-essential (2.0.4)
+  chef_handler (1.1.6)
+  cmake (0.3.0)
+  minitest-handler (1.2.0)
+    chef_handler (>= 0.0.0)

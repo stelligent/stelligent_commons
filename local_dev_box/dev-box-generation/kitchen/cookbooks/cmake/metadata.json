@@ -1,0 +1,36 @@
+{
+  "name": "cmake",
+  "description": "Install cmake",
+  "long_description": "",
+  "maintainer": "Phil Cohen",
+  "maintainer_email": "github@phlippers.net",
+  "license": "MIT",
+  "platforms": {
+    "debian": ">= 0.0.0",
+    "ubuntu": ">= 0.0.0",
+    "redhat": ">= 0.0.0",
+    "centos": ">= 0.0.0",
+    "fedora": ">= 0.0.0"
+  },
+  "dependencies": {
+  },
+  "recommendations": {
+  },
+  "suggestions": {
+    "build-essential": ">= 0.0.0"
+  },
+  "conflicting": {
+  },
+  "providing": {
+  },
+  "replacing": {
+  },
+  "attributes": {
+  },
+  "groupings": {
+  },
+  "recipes": {
+    "cmake::default": "Install default cmake support"
+  },
+  "version": "0.3.0"
+}

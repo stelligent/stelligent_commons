@@ -1,0 +1,7 @@
+name             "wordnet"
+maintainer       "John Stone"
+maintainer_email "john.stone@gsa.gov"
+license          "CC0"
+description      "Intalls Princeton WordNet Prolog library"
+version          "0.1.0"
+recipe           "wordnet::default", "Installs Pricenton WordNet Prolog Library"

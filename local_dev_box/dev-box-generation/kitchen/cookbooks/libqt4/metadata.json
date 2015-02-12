@@ -1,0 +1,41 @@
+{
+  "name": "libqt4",
+  "description": "Install libqt4 packages",
+  "long_description": "",
+  "maintainer": "Phil Cohen",
+  "maintainer_email": "github@phlippers.net",
+  "license": "MIT",
+  "platforms": {
+    "ubuntu": ">= 0.0.0"
+  },
+  "dependencies": {
+    "cmake": ">= 0.0.0"
+  },
+  "recommendations": {
+  },
+  "suggestions": {
+  },
+  "conflicting": {
+  },
+  "providing": {
+  },
+  "replacing": {
+  },
+  "attributes": {
+  },
+  "groupings": {
+  },
+  "recipes": {
+    "default": "Install a relatively complete of libqt4 packages",
+    "base": "Install base support for libqt4 packages",
+    "core": "Install the core set of libqt4 packages",
+    "dbus": "Install dbus support for libqt4 packages",
+    "dev": "Install development support for libqt4 packages",
+    "full": "Install every libqt4 package available",
+    "network": "Install network support for libqt4 packages",
+    "ruby": "Install ruby support for libqt4 packages",
+    "webkit": "Install webkit support for libqt4 packages",
+    "xml": "Install xml support for libqt4 packages"
+  },
+  "version": "0.1.0"
+}
