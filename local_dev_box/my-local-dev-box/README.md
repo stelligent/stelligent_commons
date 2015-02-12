@@ -17,7 +17,7 @@ Includes Ruby, Rails, Nginx/Passenger, Java, PostgreSQL, Node.js, npm, bower, el
 Clone the repo
 
 ```
-git clone git@github.com:stelligent/local_dev_box.git
+git clone git@github.com:stelligent/stelligent_commons.git
 ```
 
 
