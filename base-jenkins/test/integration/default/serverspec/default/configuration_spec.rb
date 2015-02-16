@@ -39,3 +39,9 @@ describe cert_file('/etc/httpd/ssl/server.crt') do
   it { should be_x509 }
   it { should be_subject('/CN=www.somebody.com/O=someorg/C=US/ST=MD/L=somecity') }
 end
+
+describe file('/etc/sysconfig/jenkins') do
+  it { should be_file }
+  it { should be_mode 644 }
+  it { should contain 'source /etc/profile' }
+end
