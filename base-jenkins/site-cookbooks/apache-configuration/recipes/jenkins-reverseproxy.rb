@@ -21,7 +21,6 @@
 
 include_recipe 'apache2::default'
 
-www_redirect = (node['jenkins']['http_proxy']['www_redirect'] == 'enable')
 host_name = node['jenkins']['http_proxy']['host_name'] || node['fqdn']
 
 if node['jenkins']['http_proxy']['ssl'] && node['jenkins']['http_proxy']['ssl']['enabled']
@@ -32,7 +31,7 @@ apache_module 'proxy'
 apache_module 'proxy_http'
 apache_module 'vhost_alias'
 
-if www_redirect || (node['jenkins']['http_proxy']['ssl'] && node['jenkins']['http_proxy']['ssl']['redirect_http'])
+if (node['jenkins']['http_proxy']['ssl'] && node['jenkins']['http_proxy']['ssl']['redirect_http'])
   apache_module 'rewrite'
 end
 
@@ -42,8 +41,7 @@ template "#{node['apache']['dir']}/sites-available/jenkins.conf" do
   group       'root'
   mode        '0644'
   variables(
-    :host_name        => host_name,
-    :www_redirect     => www_redirect
+    :host_name        => host_name
   )
 
   if File.exists?("#{node['apache']['dir']}/sites-enabled/jenkins.conf")
