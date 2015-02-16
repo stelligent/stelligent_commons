@@ -20,6 +20,10 @@ suites:
       - jenkins-configuration
       - apache-configuration::jenkins-reverseproxy
     attributes:
+      apache:
+        listen_ports:
+          - '8080'
+          - '8443'
       jenkins_git:
         username: jenkins_git_user
         email: jenkins@nowhere.com
