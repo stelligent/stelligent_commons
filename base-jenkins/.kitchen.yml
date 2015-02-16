@@ -17,8 +17,8 @@ suites:
     run_list:
       - build-essential
       - jenkins::master
-      - jenkins-configuration
       - apache-configuration::jenkins-reverseproxy
+      - jenkins-configuration
     attributes:
       apache:
         listen_ports:
@@ -49,6 +49,9 @@ suites:
 
         global_vars:
           region: us-east-1
-
-
-
+      jenkins_security:
+        authz_strategy: "matrix"
+        users: 
+          - 'admin'
+          - 'dev'
+          - 'admin'
