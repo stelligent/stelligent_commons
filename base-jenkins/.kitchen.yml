@@ -2,8 +2,8 @@
 driver:
   name: vagrant
   network:
-    - ["forwarded_port", {guest: 80, host: 80}]
-    - ["forwarded_port", {guest: 443, host: 443}]
+    - ["forwarded_port", {guest: 8080, host: 8080}]
+    - ["forwarded_port", {guest: 8443, host: 8443}]
 
 
 provisioner:
@@ -27,16 +27,21 @@ suites:
         version: "1.598"
         install_method: package
         cert_subject: "/CN=www.somebody.com/O=someorg/C=US/ST=MD/L=somecity"
+        master:
+          port: 9090
         server:
           plugins:
             - name: scripttrigger
               version: "0.28"
         http_proxy:
+          host_name: localhost
+          listen_port: 8080
           ssl:
             enabled: true
             redirect_http: true
             cert_path: /etc/httpd/ssl/server.crt
             key_path: /etc/httpd/ssl/server.key
+            listen_port: 8443
 
         global_vars:
           region: us-east-1

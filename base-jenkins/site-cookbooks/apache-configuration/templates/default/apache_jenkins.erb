@@ -1,5 +1,5 @@
 <% if @www_redirect -%>
-    <VirtualHost *:80>
+    <VirtualHost *:<%= node['jenkins']['http_proxy']['listen_port'] %>>
       ServerName        jenkins
     <% node['jenkins']['http_proxy']['host_aliases'].each do |a| -%>
       ServerAlias       www.<%= a %>
@@ -24,7 +24,7 @@
 </VirtualHost>
 
 <% if node['jenkins']['http_proxy']['ssl'] && node['jenkins']['http_proxy']['ssl']['enabled'] -%>
-    <VirtualHost *:<%= node['jenkins']['http_proxy']['ssl']['ssl_listen_ports'].join(' *:') %>>
+    <VirtualHost *:<%= node['jenkins']['http_proxy']['ssl']['listen_port'] %>>
 
     <%= render '_apache_common.erb' %>
 
