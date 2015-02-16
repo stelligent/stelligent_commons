@@ -23,6 +23,36 @@ suites:
       apache:
         listen_ports:
           - '8080'
+      jenkins_git:
+        username: jenkins_git_user
+        email: jenkins@nowhere.com
+      jenkins:
+        version: "1.598"
+        install_method: package
+        master:
+          port: 9090
+        server:
+          plugins:
+            - name: scripttrigger
+              version: "0.28"
+        http_proxy:
+          host_name: localhost
+          listen_port: 8080
+        global_vars:
+          region: us-east-1
+      jenkins_security:
+        authz_strategy: none
+
+  - name: secure
+    run_list:
+      - build-essential
+      - jenkins::master
+      - apache-configuration::jenkins-reverseproxy
+      - jenkins-configuration
+    attributes:
+      apache:
+        listen_ports:
+          - '8080'
           - '8443'
       jenkins_git:
         username: jenkins_git_user
@@ -50,8 +80,5 @@ suites:
         global_vars:
           region: us-east-1
       jenkins_security:
-        authz_strategy: "matrix"
-        users: 
-          - 'admin'
-          - 'dev'
-          - 'admin'
+        authz_strategy: matrix
+
