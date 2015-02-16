@@ -1,6 +1,10 @@
 ---
 driver:
   name: vagrant
+  network:
+    - ["forwarded_port", {guest: 80, host: 80}]
+    - ["forwarded_port", {guest: 443, host: 443}]
+
 
 provisioner:
   name: chef_solo
@@ -14,6 +18,7 @@ suites:
       - build-essential
       - jenkins::master
       - jenkins-configuration
+      - apache-configuration::jenkins-reverseproxy
     attributes:
       jenkins_git:
         username: jenkins_git_user
@@ -26,5 +31,15 @@ suites:
           plugins:
             - name: scripttrigger
               version: "0.28"
+        http_proxy:
+          ssl:
+            enabled: true
+            redirect_http: true
+            cert_path: /etc/httpd/ssl/server.crt
+            key_path: /etc/httpd/ssl/server.key
+
+        global_vars:
+          region: us-east-1
+
 
 
