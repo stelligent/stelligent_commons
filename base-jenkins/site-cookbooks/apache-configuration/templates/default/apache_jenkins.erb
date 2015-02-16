@@ -22,5 +22,7 @@
       SSLCACertificateFile <%= node['jenkins']['http_proxy']['ssl']['ca_cert_path'] %>
       <% end -%>
 
+      RequestHeader set X-Forwarded-Proto "https"
+      RequestHeader set X-Forwarded-Port "<%= node['jenkins']['http_proxy']['ssl']['listen_port'] %>"
     </VirtualHost>
 <% end -%>

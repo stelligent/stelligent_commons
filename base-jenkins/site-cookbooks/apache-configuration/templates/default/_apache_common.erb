@@ -1,4 +1,3 @@
-  ServerName        jenkins
   ProxyRequests     Off
 <% node['jenkins']['http_proxy']['host_aliases'].each do |a| -%>
   ServerAlias       <%= a %>
@@ -13,10 +12,11 @@
     Allow from all
   </Proxy>
 
-  ProxyPreserveHost on
-  ProxyPass         /  http://localhost:<%= node['jenkins']['master']['port'] %>/
+  ProxyPreserveHost On
+  ProxyPass         /  http://localhost:<%= node['jenkins']['master']['port'] %>/ nocanon
   ProxyPassReverse  /  http://localhost:<%= node['jenkins']['master']['port'] %>/
-  ProxyPassReverse  /  http://localhost:<%= node['jenkins']['master']['port'] %>/
+  AllowEncodedSlashes NoDecode
+
 <% node['jenkins']['http_proxy']['host_aliases'].each do |a| -%>
   ProxyPassReverse  /  http://<%= a%>
 <% end -%>
