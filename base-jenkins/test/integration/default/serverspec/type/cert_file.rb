@@ -1,7 +1,5 @@
 #-x509 -nodes -days 365 -newkey rsa:2048 -subj '#{node[:jenkins][:cert_subject]}'
 
-require 'jenkins_api_client'
-
 module Serverspec
   module Type
     class CertFile < Base
@@ -10,21 +8,24 @@ module Serverspec
 
         @content = IO.read location
       end
-    end
 
-    def x509?
-      begin
-        OpenSSL::X509::Certificate.new @content
-      rescue Error
-        false
+      def x509?
+        begin
+          OpenSSL::X509::Certificate.new @content
+        rescue Error
+          false
+        end
+        true
       end
-      true
-    end
 
-    def subject?(name)
-      certificate = OpenSSL::X509::Certificate.new IO.read location
+      def subject?(name)
+        certificate = OpenSSL::X509::Certificate.new IO.read @location
+        certificate.subject.to_s == name
+      end
 
-      certificate.subject == name
+      def to_s
+        @location
+      end
     end
 
     def cert_file(location)

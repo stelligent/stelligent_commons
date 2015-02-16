@@ -12,15 +12,15 @@ module Serverspec
                                          :username => @username,
                                          :password => @password)
       end
-    end
 
-    def has_plugin?(name, version)
-      puts @client.plugin.list_installed
-      return false unless @client.plugin.list_installed.has_key? name
-      if version.nil?
-        true
-      else
-        @client.plugin.list_installed[name] == version
+      def has_plugin?(name, version)
+        puts @client.plugin.list_installed
+        return false unless @client.plugin.list_installed.has_key? name
+        if version.nil?
+          true
+        else
+          @client.plugin.list_installed[name] == version
+        end
       end
     end
 
