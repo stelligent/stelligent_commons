@@ -1,22 +1,9 @@
-<% if @www_redirect -%>
-    <VirtualHost *:<%= node['jenkins']['http_proxy']['listen_port'] %>>
-      ServerName        jenkins
-    <% node['jenkins']['http_proxy']['host_aliases'].each do |a| -%>
-      ServerAlias       www.<%= a %>
-    <% end -%>
-
-      RewriteEngine On
-      RewriteCond %{HTTP_HOST} ^www.<%= @host_name %>$ [NC]
-      RewriteRule ^/(.*)$ http://<%= @host_name %>/$1 [R=301,L]
-    </VirtualHost>
-<% end -%>
-
-<VirtualHost *:80>
+<VirtualHost *:<%= node['jenkins']['http_proxy']['listen_port'] %>>
 <% if node['jenkins']['http_proxy']['ssl'] && node['jenkins']['http_proxy']['ssl']['redirect_http'] -%>
     RewriteEngine On
     # rewrite non ssl -> ssl
     RewriteCond %{HTTPS} off
-    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    RewriteRule ^(.*)$ https://%{SERVER_NAME}:<%= node['jenkins']['http_proxy']['ssl']['listen_port'] %>%{REQUEST_URI} [L,R=301]
 <% end -%>
 
 <%= render '_apache_common.erb' %>
