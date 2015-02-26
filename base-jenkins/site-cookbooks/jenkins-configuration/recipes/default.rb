@@ -1,4 +1,6 @@
-include_recipe 'jenkins-configuration::docker'
+unless node['docker']['enabled'] == false
+  include_recipe 'jenkins-configuration::docker'
+end
 include_recipe 'jenkins-configuration::install_plugins'
 include_recipe 'jenkins-configuration::git'
 include_recipe 'jenkins-configuration::vars'
