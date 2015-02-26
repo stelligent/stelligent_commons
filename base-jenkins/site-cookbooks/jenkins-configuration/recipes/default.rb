@@ -1,4 +1,4 @@
-unless node['docker']['enabled'] == false
+unless node['docker']['enabled'] == 'false'
   include_recipe 'jenkins-configuration::docker'
 end
 include_recipe 'jenkins-configuration::install_plugins'
