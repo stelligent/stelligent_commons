@@ -1,6 +1,5 @@
 
 require 'serverspec'
-require 'serverspec-aws-resources'
-require 'rspec/collection_matchers'
+require_relative 'dynamodbspec'
 
 set :backend, :exec
