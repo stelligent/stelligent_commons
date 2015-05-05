@@ -22,8 +22,9 @@ Prerequisites: Ruby 2.1 with Bundler should be installed.
    roughly reflects the type of VPC it is going to create.
 
         bin/generate_private_vpc > private_vpc_cfn_template.json
-        bin/generate_3az_vpc --ip-to-allow-to-bastion xx.xx.xx.xx > 3az_vpc_cfn_template.json
-        bin/generate_typical_2az_vpc --ip-to-allow-to-bastion xx.xx.xx.xx > 2az_vpc_cfn_template.json
+        bin/generate_3az_vpc --ip-to-allow-to-bastion xx.xx.xx.xx --nat-keypair-name key-name --bastion-keypair-name key-name > 3az_vpc_cfn_template.json
+        bin/generate_typical_2az_vpc --ip-to-allow-to-bastion xx.xx.xx.xx --nat-keypair-name key-name --bastion-keypair-name key-name > 2az_vpc_cfn_template.json
+NOTE: --nat-keypair-name and --bastion-keypair-name are optional and will default to 'nat_keypair' and 'bastion_keypair', respectively. 
 
 3. Feed the template to CloudFormation through the method of choice: AWS CLI, console, or use the CfnExecutor object.
 
