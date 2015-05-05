@@ -20,11 +20,16 @@ Clone the repo
 git clone git@github.com:stelligent/stelligent_commons.git
 ```
 
+Navigate into my-local-dev-box.
+
+```
+cd local_dev_box/my-local-dev-box
+```
 
 Add .box to vagrant
 
 ```
-vagrant box add localdevbox [devboxname].box
+vagrant box add localdevbox /path/to/[devboxname].box
 ```
 
 NOTE: If you receive an error when trying to add the localdevbox (saying it already exits), remove the box with the following line:
