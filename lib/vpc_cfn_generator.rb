@@ -412,7 +412,8 @@ class VpcCfnGenerator
         'Properties' => {
           'RouteTableIds' => [{'Ref' => 'PrivateRouteTable'}],
           'VpnGatewayId' => { 'Ref' => 'VPNGateway' }
-        }
+        },
+        'DependsOn' => 'AttachVpnGateway'
       }
     end
   end
