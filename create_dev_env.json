@@ -78,6 +78,7 @@
                     "config" : {
                         "packages" : {
                             "apt" : {
+                                "awscli" : [],
                                 "git" : [],
                                 "postgresql" : [],
                                 "ruby1.9.1-full" : [],
