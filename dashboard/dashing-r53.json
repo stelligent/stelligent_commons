@@ -1,0 +1,50 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Creates an empty Dashing server",
+    "Parameters": {
+        "KeyName": {
+            "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+            "Type": "String"
+        }
+    },
+    "Mappings": {
+        "RegionMap": {
+            "us-east-1": {
+                "AMI": "ami-1ecae776"
+            },
+            "us-west-2": {
+                "AMI": "ami-e7527ed7"
+            }
+        }
+    },
+    "Resources": {
+        "DashingDNSRecord" : {
+              "Type" : "AWS::Route53::RecordSet",
+              "Properties" : {
+                 "HostedZoneName" : "elasticoperations.com.",
+                 "Comment" : "DNS name for Dashing server.",
+                 "Name" : "dashing.elasticoperations.com.",
+                 "Type" : "CNAME",
+                 "TTL" : "900",
+                 "ResourceRecords" : [
+                    { "Fn::GetAtt" : [ "DashingLoadBalancer", "DNSName" ] }
+                 ]
+              }
+           },
+     "Outputs": {
+        "URL": {
+            "Value": {
+                "Fn::Join": [
+                    "",
+                    [
+                        "http://",
+                        {
+                            "Fn::GetAtt" : [ "DashingLoadBalancer", "DNSName"] 
+                        },
+                        ":3030/"
+                    ]
+                ]
+            }
+        }
+    }
+}
