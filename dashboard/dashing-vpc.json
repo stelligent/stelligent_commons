@@ -9,14 +9,11 @@
     "VpcId": {
       "Type": "String"
     },
-    "VpcCidrMask": {
-      "Type": "String"
-    },
-    "nattedSubnetId1": {
+    "subnetIdOne": {
       "Type": "String"
     },
 
-    "nattedSubnetId2": {
+    "subnetIdTwo": {
       "Type": "String"
     }
   },
@@ -44,10 +41,10 @@
         ],
         "Subnets": [
           {
-            "Ref": "nattedSubnetId1"
+            "Ref": "subnetIdOne"
           },
           {
-            "Ref": "nattedSubnetId2"
+            "Ref": "subnetIdTwo"
           }
         ],
         "SecurityGroups": [
@@ -97,10 +94,10 @@
         "LoadBalancerNames" : [{"Ref" : "DashingLoadBalancer"}],
         "VPCZoneIdentifier": [
           {
-            "Ref": "nattedSubnetId1"
+            "Ref": "subnetIdOne"
           },
           {
-            "Ref": "nattedSubnetId2"
+            "Ref": "subnetIdTwo"
           }
         ],
         "Tags": [
