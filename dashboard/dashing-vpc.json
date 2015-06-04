@@ -62,7 +62,7 @@
                 "LoadBalancerName": {
                     "Ref": "AWS::StackName"
                 },
-                "Scheme": "internet-facing",
+                "Scheme": "internal",
                 "Tags": [
                     {
                         "Key": "Name",
