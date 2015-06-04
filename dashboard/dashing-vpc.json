@@ -1,237 +1,250 @@
 {
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Creates an empty Dashing server",
-  "Parameters": {
-    "KeyName": {
-      "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instance",
-      "Type": "String"
-    },
-    "VpcId": {
-      "Type": "String"
-    },
-    "subnetIdOne": {
-      "Type": "String"
-    },
-
-    "subnetIdTwo": {
-      "Type": "String"
-    }
-  },
-  "Mappings": {
-    "RegionMap": {
-      "us-east-1": {
-        "AMI": "ami-1ecae776"
-      },
-      "us-west-2": {
-        "AMI": "ami-e7527ed7"
-      }
-    }
-  },
-  "Resources": {
-    "DashingLoadBalancer": {
-      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
-      "Properties": {
-        "Listeners": [
-          {
-            "InstancePort": "3030",
-            "InstanceProtocol": "HTTP",
-            "LoadBalancerPort": "80",
-            "Protocol": "HTTP"
-          }
-        ],
-        "Subnets": [
-          {
-            "Ref": "subnetIdOne"
-          },
-          {
-            "Ref": "subnetIdTwo"
-          }
-        ],
-        "SecurityGroups": [
-          {
-            "Ref": "FrontendGroup"
-          }
-        ],
-        "CrossZone": true,
-        "HealthCheck": {
-          "HealthyThreshold": "5",
-          "Interval": "15",
-          "Target": "HTTP:3030/sample",
-          "Timeout": "5",
-          "UnhealthyThreshold": "2"
-        },
-        "LoadBalancerName": {
-          "Ref": "AWS::StackName"
-        },
-        "Scheme": "internet-facing",
-
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "Dashing"
-          },
-          {
-            "Key": "StackName",
-            "Value": {
-              "Ref": "AWS::StackName"
-            }
-          }
-        ]
-      }
-    },
-    "DashingAutoScalingGroup": {
-      "Type": "AWS::AutoScaling::AutoScalingGroup",
-      "Properties": {
-        "AvailabilityZones": [
-          "us-east-1b",
-          "us-east-1c"
-        ],
-        "LaunchConfigurationName": {
-          "Ref": "DashingLaunchConfig"
-        },
-        "MaxSize": "1",
-        "MinSize": "1",
-        "LoadBalancerNames" : [{"Ref" : "DashingLoadBalancer"}],
-        "VPCZoneIdentifier": [
-          {
-            "Ref": "subnetIdOne"
-          },
-          {
-            "Ref": "subnetIdTwo"
-          }
-        ],
-        "Tags": [
-          {
-            "Key": "Name",
-            "Value": "Dashing",
-            "PropagateAtLaunch" : true
-          },
-          {
-            "Key": "StackName",
-            "Value": {
-              "Ref": "AWS::StackName"
-            },
-            "PropagateAtLaunch" : true
-          }
-        ]
-      }
-    },
-    "DashingLaunchConfig": {
-      "Type": "AWS::AutoScaling::LaunchConfiguration",
-      "Properties": {
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Creates an empty Dashing server",
+    "Parameters": {
         "KeyName": {
-          "Ref": "KeyName"
+            "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+            "Type": "String"
         },
-        "ImageId": {
-          "Fn::FindInMap": [
-            "RegionMap",
-            {
-              "Ref": "AWS::Region"
-            },
-            "AMI"
-          ]
-        },
-        "SecurityGroups": [
-          {
-            "Ref": "FrontendGroup"
-          }
-        ],
-        "InstanceType": "t2.micro",
-        "UserData": {
-          "Fn::Base64": {
-            "Fn::Join": [
-              "",
-              [
-                "#!/bin/bash -e\n",
-                "yum -y update\n",
-                "yum -y groupinstall 'Development Tools'\n",
-                "curl -sL https://rpm.nodesource.com/setup | bash -\n",
-                "yum -y install autoconf automake aws-cli curl-devel gcc gcc-c++ git libxml2 libxml2-devel libxslt libxslt-devel libyaml-devel make mlocate nodejs ruby ruby-devel sqlite-devel zlib-devel\n",
-                "# install ruby + rails\n",
-                "gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3\n",
-                "curl -L https://get.rvm.io | bash -s stable\n",
-                "source /usr/local/rvm/scripts/rvm\n",
-                "rvm requirements\n",
-                "rvm install 1.9.3\n",
-                "rvm use 1.9.3 --default\n",
-                "rvm rubygems current\n",
-                "gem install rails --no-ri --no-rdoc\n",
-                "gem install dashing\n",
-                "dashing new ",{ "Ref" : "AWS::StackName"},"\n",
-                "cd ",{ "Ref" : "AWS::StackName"},"\n",
-                "bundle\n",
-                "dashing start &\n",
-                "updatedb\n",
-                "/opt/aws/bin/cfn-signal",
-                " -e 0",
-                " '",
-                {
-                  "Ref": "WaitHandle"
-                },
-                "'\n"
-              ]
-            ]
-          }
-        }
-      }
-    },
-    "FrontendGroup": {
-      "Type": "AWS::EC2::SecurityGroup",
-      "Properties": {
         "VpcId": {
-          "Ref": "VpcId"
+            "Type": "String"
         },
-        "GroupDescription": "Enable SSH",
-        "SecurityGroupIngress": [
-          {
-            "IpProtocol": "tcp",
-            "FromPort": "22",
-            "ToPort": "22",
-            "CidrIp": "0.0.0.0/0"
-          },
-          {
-            "IpProtocol": "tcp",
-            "FromPort": "80",
-            "ToPort": "80",
-            "CidrIp": "0.0.0.0/0"
-          },
-          {
-            "IpProtocol": "tcp",
-            "FromPort": "3030",
-            "ToPort": "3030",
-            "CidrIp": "0.0.0.0/0"
-          }
-        ]
-      }
-    },
-    "WaitHandle": {
-      "Type": "AWS::CloudFormation::WaitConditionHandle"
-    },
-    "WaitCondition": {
-      "Type": "AWS::CloudFormation::WaitCondition",
-      "DependsOn": "DashingAutoScalingGroup",
-      "Properties": {
-        "Handle": {
-          "Ref": "WaitHandle"
+        "subnetIdOne": {
+            "Type": "String"
         },
-        "Timeout": "1500"
-      }
-    }
-  },
-  "Outputs": {
-    "URL": {
-      "Value": {
-        "Fn::Join": [
-          "",
-          [
-            "http://",
-            {
-              "Fn::GetAtt" : [ "DashingLoadBalancer", "DNSName"]
+        "subnetIdTwo": {
+            "Type": "String"
+        }
+    },
+    "Mappings": {
+        "RegionMap": {
+            "us-east-1": {
+                "AMI": "ami-1ecae776"
             },
-            ":3030/"
-          ]
-        ]
-      }
+            "us-west-2": {
+                "AMI": "ami-e7527ed7"
+            }
+        }
+    },
+    "Resources": {
+        "DashingLoadBalancer": {
+            "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+            "Properties": {
+                "Listeners": [
+                    {
+                        "InstancePort": "3030",
+                        "InstanceProtocol": "HTTP",
+                        "LoadBalancerPort": "80",
+                        "Protocol": "HTTP"
+                    }
+                ],
+                "Subnets": [
+                    {
+                        "Ref": "subnetIdOne"
+                    },
+                    {
+                        "Ref": "subnetIdTwo"
+                    }
+                ],
+                "SecurityGroups": [
+                    {
+                        "Ref": "FrontendGroup"
+                    }
+                ],
+                "CrossZone": true,
+                "HealthCheck": {
+                    "HealthyThreshold": "5",
+                    "Interval": "15",
+                    "Target": "HTTP:3030/sample",
+                    "Timeout": "5",
+                    "UnhealthyThreshold": "2"
+                },
+                "LoadBalancerName": {
+                    "Ref": "AWS::StackName"
+                },
+                "Scheme": "internet-facing",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "Dashing"
+                    },
+                    {
+                        "Key": "StackName",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    }
+                ]
+            }
+        },
+        "DashingAutoScalingGroup": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Properties": {
+                "AvailabilityZones": [
+                    "us-east-1b",
+                    "us-east-1c"
+                ],
+                "LaunchConfigurationName": {
+                    "Ref": "DashingLaunchConfig"
+                },
+                "MaxSize": "1",
+                "MinSize": "1",
+                "LoadBalancerNames": [
+                    {
+                        "Ref": "DashingLoadBalancer"
+                    }
+                ],
+                "VPCZoneIdentifier": [
+                    {
+                        "Ref": "subnetIdOne"
+                    },
+                    {
+                        "Ref": "subnetIdTwo"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "Dashing",
+                        "PropagateAtLaunch": true
+                    },
+                    {
+                        "Key": "StackName",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        },
+                        "PropagateAtLaunch": true
+                    }
+                ]
+            }
+        },
+        "DashingLaunchConfig": {
+            "Type": "AWS::AutoScaling::LaunchConfiguration",
+            "Properties": {
+                "KeyName": {
+                    "Ref": "KeyName"
+                },
+                "ImageId": {
+                    "Fn::FindInMap": [
+                        "RegionMap",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        "AMI"
+                    ]
+                },
+                "SecurityGroups": [
+                    {
+                        "Ref": "FrontendGroup"
+                    }
+                ],
+                "InstanceType": "t2.micro",
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#!/bin/bash -e\n",
+                                "yum -y update\n",
+                                "yum -y groupinstall 'Development Tools'\n",
+                                "curl -sL https://rpm.nodesource.com/setup | bash -\n",
+                                "yum -y install autoconf automake aws-cli curl-devel gcc gcc-c++ git libxml2 libxml2-devel libxslt libxslt-devel libyaml-devel make mlocate nodejs ruby ruby-devel sqlite-devel zlib-devel\n",
+                                "# install ruby + rails\n",
+                                "gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3\n",
+                                "curl -L https://get.rvm.io | bash -s stable\n",
+                                "source /usr/local/rvm/scripts/rvm\n",
+                                "rvm requirements\n",
+                                "rvm install 1.9.3\n",
+                                "rvm use 1.9.3 --default\n",
+                                "rvm rubygems current\n",
+                                "gem install rails --no-ri --no-rdoc\n",
+                                "gem install dashing\n",
+                                "dashing new ",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\n",
+                                "cd ",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\n",
+                                "bundle\n",
+                                "dashing start &\n",
+                                "updatedb\n",
+                                "/opt/aws/bin/cfn-signal",
+                                " -e 0",
+                                " '",
+                                {
+                                    "Ref": "WaitHandle"
+                                },
+                                "'\n"
+                            ]
+                        ]
+                    }
+                }
+            }
+        },
+        "FrontendGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VpcId"
+                },
+                "GroupDescription": "Enable SSH",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "80",
+                        "ToPort": "80",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "3030",
+                        "ToPort": "3030",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "WaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "WaitCondition": {
+            "Type": "AWS::CloudFormation::WaitCondition",
+            "DependsOn": "DashingAutoScalingGroup",
+            "Properties": {
+                "Handle": {
+                    "Ref": "WaitHandle"
+                },
+                "Timeout": "1500"
+            }
+        }
+    },
+    "Outputs": {
+        "URL": {
+            "Value": {
+                "Fn::Join": [
+                    "",
+                    [
+                        "http://",
+                        {
+                            "Fn::GetAtt": [
+                                "DashingLoadBalancer",
+                                "DNSName"
+                            ]
+                        },
+                        ":3030/"
+                    ]
+                ]
+            }
+        }
     }
-  }
 }
