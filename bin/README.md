@@ -2,5 +2,5 @@
 
     pip install boto
     aws s3 mb s3://your-bucket-name
-    python ensure_cloudtrail.py  --bucket stelligent-training-cloudtrail
+    python ensure_cloudtrail.py  --bucket your-bucket-name
 
