@@ -166,7 +166,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Enable CloudTrail logging to S3 in all regions',
                                      epilog='--bucket must be specified')
     parser.add_argument('-b', '--bucket', dest='bucket_name',
-                        help='S3 Bucket to which CloudTrail logs are sent')
+                        help='S3 Bucket to which CloudTrail logs are sent. Bucket must already exist. (aws s3 mb s3://your-bucket-name)')
     parser.add_argument('-p', '--prefix', dest='s3_prefix', default='',
                         help='Prefix to log path in S3 bucket')
     args = parser.parse_args()
