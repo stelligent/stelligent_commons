@@ -1,0 +1,26 @@
+{
+   "AWSTemplateFormatVersion":"2010-09-09",
+   "Description":"Sample Description",
+   "Parameters":{
+      "Param1":{
+         "Type":"String",
+         "Description":"Sample Description",
+         "Default":"Sample Default Value"
+      },
+      "Param2":{
+         "NoEcho":"true",
+         "Type":"String",
+         "Description":"Sample Description"
+      }
+   },
+   "Resources":{
+      "NameOfResource":{
+
+      }
+   },
+   "Outputs":{
+      "SomeOutput":{
+         "Value":"SomeValue"
+      }
+   }
+}
