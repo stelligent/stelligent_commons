@@ -4,17 +4,14 @@
   "Parameters":{
     "Bucket":{
       "Type":"String",
-      "Default":"pmd-codedeploy",
       "Description":"The unique bucket name where deployment distribution is located"
     },
     "Key":{
       "Type":"String",
-      "Default":"public/Sample_App_Linux.zip",
       "Description":"The unique bucket name where deployment distribution is located"
     },
     "ETag":{
       "Type":"String",
-      "Default":"c286ff709ac52fb99db882941552b3ca",
       "Description":"Unique tag associated with a S3 distribution bundle. Go to the Properties of the file in S3 to get this value"
     },
     "TagKey":{
@@ -24,7 +21,6 @@
     },
     "TagValue":{
       "Type":"String",
-      "Default":"PmdCodeDeployDemo1",
       "Description":"The value associated with TagKey"
     },
     "RoleArn":{
