@@ -1,0 +1,87 @@
+{
+  "AWSTemplateFormatVersion":"2010-09-09",
+  "Description":"Provision CodeDeploy Application and Deployment",
+  "Parameters":{
+    "Bucket":{
+      "Type":"String",
+      "Default":"pmd-codedeploy",
+      "Description":"The unique bucket name where deployment distribution is located"
+    },
+    "Key":{
+      "Type":"String",
+      "Default":"public/Sample_App_Linux.zip",
+      "Description":"The unique bucket name where deployment distribution is located"
+    },
+    "ETag":{
+      "Type":"String",
+      "Default":"c286ff709ac52fb99db882941552b3ca",
+      "Description":"Unique tag associated with a S3 distribution bundle. Go to the Properties of the file in S3 to get this value"
+    },
+    "TagKey":{
+      "Type":"String",
+      "Default":"Name",
+      "Description":"The tag name that is associated with EC2 instances on which CodeDeploy agent is installed"
+    },
+    "TagValue":{
+      "Type":"String",
+      "Default":"PmdCodeDeployDemo1",
+      "Description":"The value associated with TagKey"
+    },
+    "RoleArn":{
+      "Type":"String",
+      "Description":"ARN for IAM role created when EC2 instances that have installed CodeDeploy agent were provisioned. Output value of CFN stack."
+    }
+  },
+  "Resources":{
+    "MyApplication":{
+      "Type":"AWS::CodeDeploy::Application"
+    },
+    "MyDeploymentGroup":{
+      "Type":"AWS::CodeDeploy::DeploymentGroup",
+      "DependsOn":"MyApplication",
+      "Properties":{
+        "ApplicationName":{
+          "Ref":"MyApplication"
+        },
+        "Deployment":{
+          "Description":"First time",
+          "IgnoreApplicationStopFailures":"true",
+          "Revision":{
+            "RevisionType":"S3",
+            "S3Location":{
+              "Bucket":{
+                "Ref":"Bucket"
+              },
+              "BundleType":"Zip",
+              "ETag":{
+                "Ref":"ETag"
+              },
+              "Key":{
+                "Ref":"Key"
+              }
+            }
+          }
+        },
+        "Ec2TagFilters":[
+          {
+            "Key":{
+              "Ref":"TagKey"
+            },
+            "Value":{
+              "Ref":"TagValue"
+            },
+            "Type":"KEY_AND_VALUE"
+          }
+        ],
+        "ServiceRoleArn":{
+          "Ref":"RoleArn"
+        }
+      }
+    }
+  },
+  "Outputs":{
+    "SomeOutput":{
+      "Value":"SomeValue"
+    }
+  }
+}
