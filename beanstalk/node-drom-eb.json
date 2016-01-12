@@ -13,8 +13,8 @@
         "ApplicationName": { "Ref": "sampleApplication" },
         "Description": "AWS ElasticBeanstalk Sample Application Version",
         "SourceBundle": {
-          "S3Bucket": { "Fn::Join": [ "-", [ "elasticbeanstalk-samples", { "Ref": "AWS::Region" } ] ] },
-          "S3Key": "nodejs-sample.zip"
+          "S3Bucket": "dromedary-114930652771",
+          "S3Key": "dromedary-20160102-040708.zip"
         }
       }
     },
@@ -46,11 +46,11 @@
     "sampleEnvironment": {
       "Type": "AWS::ElasticBeanstalk::Environment",
       "Properties": {
-        "ApplicationName": { "Ref": "nodeApplication" },
-        "Description": "AWS ElasticBeanstalk Sample Node Environment",
+        "ApplicationName": { "Ref": "sampleApplication" },
+        "Description": "AWS ElasticBeanstalk Sample Environment",
         "TemplateName": { "Ref": "sampleConfigurationTemplate" },
         "VersionLabel": { "Ref": "sampleApplicationVersion" }
       }
     }
   }
-}
+  }

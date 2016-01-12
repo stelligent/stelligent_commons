@@ -14,7 +14,7 @@
         "Description": "AWS ElasticBeanstalk Sample Application Version",
         "SourceBundle": {
           "S3Bucket": { "Fn::Join": [ "-", [ "elasticbeanstalk-samples", { "Ref": "AWS::Region" } ] ] },
-          "S3Key": "nodejs-sample.zip"
+          "S3Key": "php-sample.zip"
         }
       }
     },
@@ -40,14 +40,14 @@
             "Value": "LoadBalanced"
           }
         ],
-        "SolutionStackName": "64bit Amazon Linux 2015.09 v2.0.5 running Node.js"
+        "SolutionStackName": "64bit Amazon Linux running PHP 5.3"
       }
     },
     "sampleEnvironment": {
       "Type": "AWS::ElasticBeanstalk::Environment",
       "Properties": {
-        "ApplicationName": { "Ref": "nodeApplication" },
-        "Description": "AWS ElasticBeanstalk Sample Node Environment",
+        "ApplicationName": { "Ref": "sampleApplication" },
+        "Description": "AWS ElasticBeanstalk Sample Environment",
         "TemplateName": { "Ref": "sampleConfigurationTemplate" },
         "VersionLabel": { "Ref": "sampleApplicationVersion" }
       }
