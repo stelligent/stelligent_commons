@@ -1019,6 +1019,11 @@
                "Arn"
             ]
          }
+      },
+      "MyTagValue":{
+         "Value":{
+            "Ref":"TagValue"
+         }
       }
    }
 }
