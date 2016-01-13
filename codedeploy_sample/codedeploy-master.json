@@ -26,7 +26,7 @@
     }
   },
   "Resources":{
-    "myStackWithParams":{
+    "CodeDeployEC2InstancesStack":{
       "Type":"AWS::CloudFormation::Stack",
       "Properties":{
         "TemplateURL":"https://s3.amazonaws.com/pmd-cfn/public/codedeploy-three-ec2.json",
@@ -43,20 +43,20 @@
     },
     "CodeDeploySimpleStack":{
       "Type":"AWS::CloudFormation::Stack",
-      "DependsOn":"myStackWithParams",
+      "DependsOn":"CodeDeployEC2InstancesStack",
       "Properties":{
         "TemplateURL":"https://s3.amazonaws.com/pmd-cfn/public/codedeploy-simple.json",
         "TimeoutInMinutes":"60",
         "Parameters":{
           "TagValue":{
             "Fn::GetAtt":[
-              "myStackWithParams",
+              "CodeDeployEC2InstancesStack",
               "Outputs.MyTagValue"
             ]
           },
           "RoleArn":{
             "Fn::GetAtt":[
-              "myStackWithParams",
+              "CodeDeployEC2InstancesStack",
               "Outputs.CodeDeployTrustRoleARN"
             ]
           },
@@ -73,13 +73,13 @@
   "Outputs":{
     "StackRef":{
       "Value":{
-        "Ref":"myStackWithParams"
+        "Ref":"CodeDeployEC2InstancesStack"
       }
     },
     "MyCodeDeployTrustRoleARN":{
       "Value":{
         "Fn::GetAtt":[
-          "myStackWithParams",
+          "CodeDeployEC2InstancesStack",
           "Outputs.CodeDeployTrustRoleARN"
         ]
       }
