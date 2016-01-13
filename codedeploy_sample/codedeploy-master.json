@@ -29,7 +29,7 @@
     "CodeDeployEC2InstancesStack":{
       "Type":"AWS::CloudFormation::Stack",
       "Properties":{
-        "TemplateURL":"https://s3.amazonaws.com/pmd-cfn/public/codedeploy-three-ec2.json",
+        "TemplateURL":"https://s3.amazonaws.com/pmd-cfn/public/codedeploy-ec2.json",
         "TimeoutInMinutes":"60",
         "Parameters":{
           "TagValue":{
@@ -45,7 +45,7 @@
       "Type":"AWS::CloudFormation::Stack",
       "DependsOn":"CodeDeployEC2InstancesStack",
       "Properties":{
-        "TemplateURL":"https://s3.amazonaws.com/pmd-cfn/public/codedeploy-simple.json",
+        "TemplateURL":"https://s3.amazonaws.com/pmd-cfn/public/codedeploy-deploy.json",
         "TimeoutInMinutes":"60",
         "Parameters":{
           "TagValue":{
