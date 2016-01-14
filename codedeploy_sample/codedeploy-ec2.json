@@ -1025,11 +1025,20 @@
         "Ref":"TagValue"
       }
     },
-    "MyPublicIp":{
+    "EC2InstanceURL":{
       "Value":{
-        "Fn::GetAtt":[
-          "LinuxEC2Instance",
-          "PublicIp"
+        "Fn::Join":[
+          "",
+          [
+            "http://",
+            {
+              "Fn::GetAtt":[
+                "LinuxEC2Instance",
+                "PublicIp"
+              ]
+            },
+            "/"
+          ]
         ]
       }
     }
