@@ -26,13 +26,6 @@
     }
   },
   "Resources":{
-    "CodePipelineInstancesStack":{
-      "Type":"AWS::CloudFormation::Stack",
-      "Properties":{
-        "TemplateURL":"https://s3.amazonaws.com/pmd-cfn/public/codedeploy-codepipeline.json",
-        "TimeoutInMinutes":"60"
-      }
-    },
     "CodeDeployEC2InstancesStack":{
       "Type":"AWS::CloudFormation::Stack",
       "Properties":{
