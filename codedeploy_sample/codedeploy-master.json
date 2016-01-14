@@ -29,7 +29,7 @@
     "CodeDeployEC2InstancesStack":{
       "Type":"AWS::CloudFormation::Stack",
       "Properties":{
-        "TemplateURL":"https://s3.amazonaws.com/pmd-cfn/public/codedeploy-ec2.json",
+        "TemplateURL":"http://s3.amazonaws.com/aws-codedeploy-us-east-1/templates/latest/CodeDeploy_SampleCF_Template.json",
         "TimeoutInMinutes":"60",
         "Parameters":{
           "TagValue":{
