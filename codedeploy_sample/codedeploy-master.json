@@ -71,16 +71,19 @@
     }
   },
   "Outputs":{
-    "StackRef":{
-      "Value":{
-        "Ref":"CodeDeployEC2InstancesStack"
-      }
-    },
     "MyCodeDeployTrustRoleARN":{
       "Value":{
         "Fn::GetAtt":[
           "CodeDeployEC2InstancesStack",
           "Outputs.CodeDeployTrustRoleARN"
+        ]
+      }
+    },
+    "MyEC2InstanceURL":{
+      "Value":{
+        "Fn::GetAtt":[
+          "CodeDeployEC2InstancesStack",
+          "Outputs.EC2InstanceURL"
         ]
       }
     }
