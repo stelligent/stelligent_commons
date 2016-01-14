@@ -71,14 +71,6 @@
     }
   },
   "Outputs":{
-    "MyCodeDeployTrustRoleARN":{
-      "Value":{
-        "Fn::GetAtt":[
-          "CodeDeployEC2InstancesStack",
-          "Outputs.CodeDeployTrustRoleARN"
-        ]
-      }
-    },
     "MyEC2InstanceURL":{
       "Value":{
         "Fn::GetAtt":[
