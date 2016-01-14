@@ -1025,11 +1025,11 @@
         "Ref":"TagValue"
       }
     },
-    "MyPrivateIp":{
+    "MyPublicIp":{
       "Value":{
         "Fn::GetAtt":[
           "LinuxEC2Instance",
-          "PrivateIp"
+          "PublicIp"
         ]
       }
     }
