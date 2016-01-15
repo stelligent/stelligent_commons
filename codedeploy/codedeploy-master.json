@@ -49,10 +49,7 @@
         "TimeoutInMinutes":"60",
         "Parameters":{
           "TagValue":{
-            "Fn::GetAtt":[
-              "CodeDeployEC2InstancesStack",
-              "Outputs.MyTagValue"
-            ]
+            "Ref":"LocalTagValue"
           },
           "RoleArn":{
             "Fn::GetAtt":[
