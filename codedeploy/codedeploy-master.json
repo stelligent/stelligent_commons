@@ -45,7 +45,7 @@
       "Type":"AWS::CloudFormation::Stack",
       "DependsOn":"CodeDeployEC2InstancesStack",
       "Properties":{
-        "TemplateURL":"https://s3.amazonaws.com/pmd-cfn/public/codedeploy-deployment.json",
+        "TemplateURL":"https://s3.amazonaws.com/stelligent-training-public/public/codedeploy-deployment.json",
         "TimeoutInMinutes":"60",
         "Parameters":{
           "TagValue":{
