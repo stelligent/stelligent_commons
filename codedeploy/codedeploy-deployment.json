@@ -67,10 +67,5 @@
         }
       }
     }
-  },
-  "Outputs":{
-    "SomeOutput":{
-      "Value":"SomeValue"
-    }
   }
 }

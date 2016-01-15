@@ -69,15 +69,5 @@
         }
       }
     }
-  },
-  "Outputs":{
-    "MyEC2InstanceURL":{
-      "Value":{
-        "Fn::GetAtt":[
-          "CodeDeployEC2InstancesStack",
-          "Outputs.EC2InstanceURL"
-        ]
-      }
-    }
   }
 }
