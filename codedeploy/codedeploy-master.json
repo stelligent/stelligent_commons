@@ -2,21 +2,21 @@
   "Description":"Launch nested CloudFormation stack to provision and run AWS CodeDeploy",
   "AWSTemplateFormatVersion":"2010-09-09",
   "Parameters":{
-    "LocalBucket":{
+    "S3Bucket":{
       "Type":"String",
       "Description":"The unique bucket name where deployment distribution is located"
     },
-    "LocalKey":{
+    "S3Key":{
       "Type":"String",
       "Description":"The unique bucket name where deployment distribution is located"
     },
-    "LocalTagValue":{
+    "EC2TagValue":{
       "Description":"The tag value that identifies this as a target for deployments.",
       "Type":"String",
       "AllowedPattern":"[\\x20-\\x7E]*",
       "ConstraintDescription":"Can contain only ASCII characters."
     },
-    "LocalKeyPairName":{
+    "EC2KeyPairName":{
       "Description":"Name of an existing Amazon EC2 key pair to enable SSH or RDP access to the instances.",
       "Type":"AWS::EC2::KeyPair::KeyName",
       "MinLength":"1",
@@ -33,10 +33,10 @@
         "TimeoutInMinutes":"60",
         "Parameters":{
           "TagValue":{
-            "Ref":"LocalTagValue"
+            "Ref":"EC2TagValue"
           },
           "KeyPairName":{
-            "Ref":"LocalKeyPairName"
+            "Ref":"EC2KeyPairName"
           }
         }
       }
@@ -49,7 +49,7 @@
         "TimeoutInMinutes":"60",
         "Parameters":{
           "TagValue":{
-            "Ref":"LocalTagValue"
+            "Ref":"EC2TagValue"
           },
           "RoleArn":{
             "Fn::GetAtt":[
@@ -58,10 +58,10 @@
             ]
           },
           "Bucket":{
-            "Ref":"LocalBucket"
+            "Ref":"S3Bucket"
           },
           "Key":{
-            "Ref":"LocalKey"
+            "Ref":"S3Key"
           }
         }
       }
