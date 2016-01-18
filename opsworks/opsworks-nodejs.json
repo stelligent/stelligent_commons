@@ -88,33 +88,19 @@
           "Ref":"myStack"
         },
         "Type":"custom",
-        "Shortname":"custom",
+        "Shortname":"custom-app",
         "EnableAutoHealing":"true",
         "AutoAssignElasticIps":"false",
         "AutoAssignPublicIps":"true",
         "Name":"MyNodeApp",
         "CustomRecipes":{
           "Deploy":[
-            "nodejs_demo::nodejs_demo"
+            "nodejs_demo"
           ]
         }
       }
     },
     "myAppInstance1":{
-      "Type":"AWS::OpsWorks::Instance",
-      "Properties":{
-        "StackId":{
-          "Ref":"myStack"
-        },
-        "LayerIds":[
-          {
-            "Ref":"myLayer"
-          }
-        ],
-        "InstanceType":"m1.small"
-      }
-    },
-    "myAppInstance2":{
       "Type":"AWS::OpsWorks::Instance",
       "Properties":{
         "StackId":{
