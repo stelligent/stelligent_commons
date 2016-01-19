@@ -39,7 +39,7 @@
         "DefaultOs":"Amazon Linux 2015.09",
         "ConfigurationManager":{
           "Name":"Chef",
-          "Version":"11.10"
+          "Version":"12"
         },
         "DefaultRootDeviceType":"ebs",
         "ServiceRoleArn":{
