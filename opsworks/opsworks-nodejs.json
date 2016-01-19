@@ -1,5 +1,6 @@
 {
   "AWSTemplateFormatVersion":"2010-09-09",
+  "Description":"Stelligent CloudFormation Sample Template OpsWorksNodejs based on PHP OpsWorks.template: Launches OpsWorks stack, layer, instances and associated resources to run a Node.js application provided by AWS. ** This template creates one or more Amazon EC2 instances. You will be billed for the AWS resources used if you create a stack from this template.",
   "Parameters":{
     "ServiceRole":{
       "Default":"aws-opsworks-service-role",
@@ -88,10 +89,18 @@
           "Ref":"myStack"
         },
         "Type":"custom",
-        "Shortname":"custom-app",
+        "Shortname":"nodejs-server",
         "EnableAutoHealing":"true",
         "AutoAssignElasticIps":"false",
         "AutoAssignPublicIps":"true",
+        "CustomSecurityGroupIds":[
+          {
+            "Fn::GetAtt":[
+              "OpsWorksSecurityGroup",
+              "GroupId"
+            ]
+          }
+        ],
         "Name":"MyNodeApp",
         "CustomRecipes":{
           "Deploy":[
@@ -111,7 +120,20 @@
             "Ref":"myLayer"
           }
         ],
-        "InstanceType":"m1.small"
+        "InstanceType":"t2.medium"
+      }
+    },
+    "OpsWorksSecurityGroup":{
+      "Type":"AWS::EC2::SecurityGroup",
+      "Properties":{
+        "GroupDescription":"Allow inbound requests from the ELB to the OpsWorks instances",
+        "SecurityGroupIngress":[
+          {
+            "IpProtocol":"tcp",
+            "FromPort":"80",
+            "ToPort":"80"
+          }
+        ]
       }
     },
     "myApp":{
@@ -121,6 +143,7 @@
           "Ref":"myStack"
         },
         "Type":"other",
+        "Shortname":"nodejs_sample_app",
         "Name":{
           "Ref":"AppName"
         },
