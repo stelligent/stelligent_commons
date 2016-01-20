@@ -1,5 +1,6 @@
 {
   "AWSTemplateFormatVersion":"2010-09-09",
+  "Description":"Stelligent CloudFormation Sample Template OpsWorksNodejs: Launches OpsWorks stack, layer, instances and associated resources to run a Node.js application provided by AWS. ** This template creates one or more Amazon EC2 instances. You will be billed for the AWS resources used if you create a stack from this template.",
   "Parameters":{
     "ServiceRole":{
       "Default":"aws-opsworks-service-role",

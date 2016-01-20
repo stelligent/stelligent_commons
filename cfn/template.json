@@ -1,26 +1,19 @@
 {
-   "AWSTemplateFormatVersion":"2010-09-09",
-   "Description":"Sample Description",
-   "Parameters":{
-      "Param1":{
-         "Type":"String",
-         "Description":"Sample Description",
-         "Default":"Sample Default Value"
-      },
-      "Param2":{
-         "NoEcho":"true",
-         "Type":"String",
-         "Description":"Sample Description"
+  "AWSTemplateFormatVersion":"2010-09-09",
+  "Description":"Stelligent CloudFormation Sample Template ** This template creates one or more Amazon resources. You will be billed for the AWS resources used if you create a stack from this template.",
+  "Resources":{
+    "MyQueue":{
+      "Type":"AWS::SQS::Queue",
+      "Properties":{
+        "QueueName":"SampleQueue"
       }
-   },
-   "Resources":{
-      "NameOfResource":{
-
+    }
+  },
+  "Outputs":{
+    "MyAWSAccountId":{
+      "Value":{
+        "Ref":"AWS::AccountId"
       }
-   },
-   "Outputs":{
-      "SomeOutput":{
-         "Value":"SomeValue"
-      }
-   }
+    }
+  }
 }
