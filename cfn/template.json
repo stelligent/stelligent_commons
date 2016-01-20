@@ -5,7 +5,17 @@
     "MyQueue":{
       "Type":"AWS::SQS::Queue",
       "Properties":{
-        "QueueName":"SampleQueue"
+        "QueueName":{
+          "Fn::Join":[
+            "",
+            [
+              "SampleQueue-",
+              {
+                "Ref":"AWS::StackName"
+              }
+            ]
+          ]
+        }
       }
     }
   },
