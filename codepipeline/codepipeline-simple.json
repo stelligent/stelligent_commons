@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion":"2010-09-09",
-  "Description":"Launched EC2 instance. Launches CodeDeploy application and group. Uses CodeDeploy resources in creating a generic CodePipeline Stack",
+  "Description":"Launches an EC2 instance. Launches CodeDeploy application and deployment group. Uses CodeDeploy resources in creating a generic CodePipeline Stack",
   "Parameters":{
     "S3Bucket":{
       "Type":"String",
@@ -72,6 +72,12 @@
       "Type":"AWS::CodePipeline::Pipeline",
       "DependsOn":"CodeDeploySimpleStack",
       "Properties":{
+        "DisableInboundStageTransitions":[
+          {
+            "Reason":"Demonstration",
+            "StageName":"Production"
+          }
+        ],
         "RoleArn":{
           "Fn::Join":[
             "",
@@ -131,6 +137,43 @@
                     "Outputs.MyDeploymentGroup"
                   ]
                 },
+                "ActionTypeId":{
+                  "Category":"Deploy",
+                  "Owner":"AWS",
+                  "Version":"1",
+                  "Provider":"CodeDeploy"
+                },
+                "OutputArtifacts":[
+
+                ],
+                "Configuration":{
+                  "ApplicationName":{
+                    "Fn::GetAtt":[
+                      "CodeDeploySimpleStack",
+                      "Outputs.MyApplication"
+                    ]
+                  },
+                  "DeploymentGroupName":{
+                    "Fn::GetAtt":[
+                      "CodeDeploySimpleStack",
+                      "Outputs.MyDeploymentGroup"
+                    ]
+                  }
+                },
+                "RunOrder":1
+              }
+            ]
+          },
+          {
+            "Name":"Production",
+            "Actions":[
+              {
+                "InputArtifacts":[
+                  {
+                    "Name":"MyApp"
+                  }
+                ],
+                "Name":"Deploy-Second-Deployment",
                 "ActionTypeId":{
                   "Category":"Deploy",
                   "Owner":"AWS",
