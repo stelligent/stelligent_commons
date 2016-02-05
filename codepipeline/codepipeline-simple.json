@@ -157,43 +157,6 @@
                 "RunOrder":1
               }
             ]
-          },
-          {
-            "Name":"Production",
-            "Actions":[
-              {
-                "InputArtifacts":[
-                  {
-                    "Name":"MyApp"
-                  }
-                ],
-                "Name":"Deploy-Second-Deployment",
-                "ActionTypeId":{
-                  "Category":"Deploy",
-                  "Owner":"AWS",
-                  "Version":"1",
-                  "Provider":"CodeDeploy"
-                },
-                "OutputArtifacts":[
-
-                ],
-                "Configuration":{
-                  "ApplicationName":{
-                    "Fn::GetAtt":[
-                      "CodeDeploySimpleStack",
-                      "Outputs.MyApplication"
-                    ]
-                  },
-                  "DeploymentGroupName":{
-                    "Fn::GetAtt":[
-                      "CodeDeploySimpleStack",
-                      "Outputs.MyDeploymentGroup"
-                    ]
-                  }
-                },
-                "RunOrder":1
-              }
-            ]
           }
         ],
         "ArtifactStore":{
