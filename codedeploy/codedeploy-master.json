@@ -66,5 +66,12 @@
         }
       }
     }
+  },
+  "Outputs":{
+    "MyAWSAccountId":{
+      "Value":{
+        "Ref":"AWS::AccountId"
+      }
+    }
   }
 }

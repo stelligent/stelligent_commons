@@ -67,5 +67,22 @@
         }
       }
     }
+  },
+  "Outputs":{
+    "MyAWSAccountId":{
+      "Value":{
+        "Ref":"AWS::AccountId"
+      }
+    },
+    "MyApplication":{
+      "Value":{
+        "Ref":"MyApplication"
+      }
+    },
+    "MyDeploymentGroup":{
+      "Value":{
+        "Ref":"MyDeploymentGroup"
+      }
+    }
   }
 }
