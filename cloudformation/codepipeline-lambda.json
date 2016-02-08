@@ -32,7 +32,7 @@
             "Ref":"AWS::StackName"
           },
           "KeyPairName":{
-            "Ref":"EC2KeyPairName"
+            "Ref":"KeyName"
           }
         }
       }
