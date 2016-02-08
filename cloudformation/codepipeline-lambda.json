@@ -12,7 +12,7 @@
       "Description":"S3 key within S3Bucket.",
       "Default":"public/codepipeline/aws-codepipeline-s3-aws-codedeploy_linux.zip"
     },
-    "EC2KeyPairName":{
+    "KeyName":{
       "Description":"Name of an existing Amazon EC2 key pair to enable SSH or RDP access to the instances.",
       "Type":"AWS::EC2::KeyPair::KeyName",
       "MinLength":"1",
