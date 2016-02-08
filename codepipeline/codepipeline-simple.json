@@ -12,12 +12,6 @@
       "Description":"S3 key within S3Bucket.",
       "Default":"public/codepipeline/aws-codepipeline-s3-aws-codedeploy_linux.zip"
     },
-    "EC2TagValue":{
-      "Description":"The tag value that identifies this as a target for deployments.",
-      "Type":"String",
-      "AllowedPattern":"[\\x20-\\x7E]*",
-      "ConstraintDescription":"Can contain only ASCII characters."
-    },
     "EC2KeyPairName":{
       "Description":"Name of an existing Amazon EC2 key pair to enable SSH or RDP access to the instances.",
       "Type":"AWS::EC2::KeyPair::KeyName",
@@ -35,7 +29,7 @@
         "TimeoutInMinutes":"60",
         "Parameters":{
           "TagValue":{
-            "Ref":"EC2TagValue"
+            "Ref":"AWS::StackName"
           },
           "KeyPairName":{
             "Ref":"EC2KeyPairName"
@@ -51,7 +45,7 @@
         "TimeoutInMinutes":"60",
         "Parameters":{
           "TagValue":{
-            "Ref":"EC2TagValue"
+            "Ref":"AWS::StackName"
           },
           "RoleArn":{
             "Fn::GetAtt":[

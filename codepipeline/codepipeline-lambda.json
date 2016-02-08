@@ -12,12 +12,6 @@
       "Description":"S3 key within S3Bucket.",
       "Default":"public/codepipeline/aws-codepipeline-s3-aws-codedeploy_linux.zip"
     },
-    "EC2TagValue":{
-      "Description":"The tag value that identifies this as a target for deployments.",
-      "Type":"String",
-      "AllowedPattern":"[\\x20-\\x7E]*",
-      "ConstraintDescription":"Can contain only ASCII characters."
-    },
     "EC2KeyPairName":{
       "Description":"Name of an existing Amazon EC2 key pair to enable SSH or RDP access to the instances.",
       "Type":"AWS::EC2::KeyPair::KeyName",
@@ -31,11 +25,11 @@
     "CodeDeployEC2InstancesStack":{
       "Type":"AWS::CloudFormation::Stack",
       "Properties":{
-        "TemplateURL":"http://s3.amazonaws.com/aws-codedeploy-us-east-1/templates/latest/CodeDeploy_SampleCF_Template.json",
+        "TemplateURL":"https://s3.amazonaws.com/stelligent-training-public/public/codedeploy/codedeploy-ec2.json",
         "TimeoutInMinutes":"60",
         "Parameters":{
           "TagValue":{
-            "Ref":"EC2TagValue"
+            "Ref":"AWS::StackName"
           },
           "KeyPairName":{
             "Ref":"EC2KeyPairName"
@@ -51,7 +45,7 @@
         "TimeoutInMinutes":"60",
         "Parameters":{
           "TagValue":{
-            "Ref":"EC2TagValue"
+            "Ref":"AWS::StackName"
           },
           "RoleArn":{
             "Fn::GetAtt":[
@@ -156,7 +150,10 @@
     },
     "GenericPipeline":{
       "Type":"AWS::CodePipeline::Pipeline",
-      "DependsOn":"CodeDeploySimpleStack",
+      "DependsOn":[
+        "CodeDeploySimpleStack",
+        "CodePipelineLambdaTest"
+      ],
       "Properties":{
         "DisableInboundStageTransitions":[
           {
@@ -268,8 +265,23 @@
 
                 ],
                 "Configuration":{
-                  "FunctionName":"MyLambdaFunctionForAWSCodePipeline",
-                  "UserParameters":"http://54.154.170.123"
+                  "FunctionName":{
+                    "Ref":"CodePipelineLambdaTest"
+                  },
+                  "UserParameters":{
+                    "Fn::Join":[
+                      "",
+                      [
+                        "http://",
+                        {
+                          "Fn::GetAtt":[
+                            "CodeDeployEC2InstancesStack",
+                            "Outputs.PublicIp"
+                          ]
+                        }
+                      ]
+                    ]
+                  }
                 },
                 "RunOrder":1
               }
@@ -326,6 +338,11 @@
     "StackName":{
       "Value":{
         "Ref":"AWS::StackName"
+      }
+    },
+    "LambdaFunctionName":{
+      "Value":{
+        "Ref":"CodePipelineLambdaTest"
       }
     }
   }
