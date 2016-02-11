@@ -14,13 +14,6 @@
       }
    },
    "Resources":{
-      "CustomActionsStack":{
-         "Type":"AWS::CloudFormation::Stack",
-         "Properties":{
-            "TemplateURL":"https://s3.amazonaws.com/stelligent-training-public/public/codepipeline/codepipeline-custom-actions.json",
-            "TimeoutInMinutes":"60"
-         }
-      },
       "LambdaCodePipelineExecutionPolicy":{
          "DependsOn":[
             "CodePipelineLambdaRole"
@@ -110,7 +103,6 @@
       "CodePipelineStack":{
          "Type":"AWS::CodePipeline::Pipeline",
          "DependsOn":[
-            "CustomActionsStack",
             "CodePipelineLambdaDummy"
          ],
          "Properties":{
@@ -407,7 +399,7 @@
                         "InputArtifacts":[
 
                         ],
-                        "Name":"SwitchEndpoints",
+                        "Name":"SwitchEnvironments",
                         "ActionTypeId":{
                            "Category":"Invoke",
                            "Owner":"AWS",
