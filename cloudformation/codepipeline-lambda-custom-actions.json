@@ -11,61 +11,9 @@
          "Type":"String",
          "Description":"S3 key within S3Bucket.",
          "Default":"public/codepipeline/aws-codepipeline-s3-aws-codedeploy_linux.zip"
-      },
-      "MyInputArtifacts":{
-         "Type":"String",
-         "Default":"MyApp"
-      },
-      "KeyName":{
-         "Description":"Name of an existing Amazon EC2 key pair to enable SSH or RDP access to the instances.",
-         "Type":"AWS::EC2::KeyPair::KeyName",
-         "MinLength":"1",
-         "MaxLength":"255",
-         "AllowedPattern":"[\\x20-\\x7E]*",
-         "ConstraintDescription":"Can contain only ASCII characters."
       }
    },
    "Resources":{
-      "CodeDeployEC2InstancesStack":{
-         "Type":"AWS::CloudFormation::Stack",
-         "Properties":{
-            "TemplateURL":"https://s3.amazonaws.com/stelligent-training-public/public/codedeploy/codedeploy-ec2.json",
-            "TimeoutInMinutes":"60",
-            "Parameters":{
-               "TagValue":{
-                  "Ref":"AWS::StackName"
-               },
-               "KeyPairName":{
-                  "Ref":"KeyName"
-               }
-            }
-         }
-      },
-      "CodeDeploySimpleStack":{
-         "Type":"AWS::CloudFormation::Stack",
-         "DependsOn":"CodeDeployEC2InstancesStack",
-         "Properties":{
-            "TemplateURL":"https://s3.amazonaws.com/stelligent-training-public/public/codedeploy/codedeploy-deployment.json",
-            "TimeoutInMinutes":"60",
-            "Parameters":{
-               "TagValue":{
-                  "Ref":"AWS::StackName"
-               },
-               "RoleArn":{
-                  "Fn::GetAtt":[
-                     "CodeDeployEC2InstancesStack",
-                     "Outputs.CodeDeployTrustRoleARN"
-                  ]
-               },
-               "Bucket":{
-                  "Ref":"S3Bucket"
-               },
-               "Key":{
-                  "Ref":"S3Key"
-               }
-            }
-         }
-      },
       "CustomActionsStack":{
          "Type":"AWS::CloudFormation::Stack",
          "Properties":{
@@ -133,32 +81,6 @@
             "Path":"/"
          }
       },
-      "CodePipelineLambdaTest":{
-         "Type":"AWS::Lambda::Function",
-         "DependsOn":[
-            "CodePipelineLambdaRole",
-            "LambdaCodePipelineExecutionPolicy"
-         ],
-         "Properties":{
-            "Code":{
-               "S3Bucket":{
-                  "Ref":"S3Bucket"
-               },
-               "S3Key":"Archive.zip"
-            },
-            "Role":{
-               "Fn::GetAtt":[
-                  "CodePipelineLambdaRole",
-                  "Arn"
-               ]
-            },
-            "Description":"Validate a website URL",
-            "Timeout":20,
-            "Handler":"validateurl.handler",
-            "Runtime":"nodejs",
-            "MemorySize":128
-         }
-      },
       "CodePipelineLambdaDummy":{
          "Type":"AWS::Lambda::Function",
          "DependsOn":[
@@ -185,12 +107,11 @@
             "MemorySize":128
          }
       },
-      "GenericPipeline":{
+      "CodePipelineStack":{
          "Type":"AWS::CodePipeline::Pipeline",
          "DependsOn":[
             "CustomActionsStack",
-            "CodeDeploySimpleStack",
-            "CodePipelineLambdaTest"
+            "CodePipelineLambdaDummy"
          ],
          "Properties":{
             "DisableInboundStageTransitions":[
@@ -244,41 +165,28 @@
                   ]
                },
                {
-                  "Name":"Beta",
+                  "Name":"Commit",
                   "Actions":[
                      {
                         "InputArtifacts":[
-                           {
-                              "Name":"MyApp"
-                           }
+
                         ],
-                        "Name":{
-                           "Fn::GetAtt":[
-                              "CodeDeploySimpleStack",
-                              "Outputs.MyDeploymentGroup"
-                           ]
-                        },
+                        "Name":"Build",
                         "ActionTypeId":{
-                           "Category":"Deploy",
+                           "Category":"Invoke",
                            "Owner":"AWS",
                            "Version":"1",
-                           "Provider":"CodeDeploy"
+                           "Provider":"Lambda"
                         },
                         "OutputArtifacts":[
 
                         ],
                         "Configuration":{
-                           "ApplicationName":{
-                              "Fn::GetAtt":[
-                                 "CodeDeploySimpleStack",
-                                 "Outputs.MyApplication"
-                              ]
+                           "FunctionName":{
+                              "Ref":"CodePipelineLambdaDummy"
                            },
-                           "DeploymentGroupName":{
-                              "Fn::GetAtt":[
-                                 "CodeDeploySimpleStack",
-                                 "Outputs.MyDeploymentGroup"
-                              ]
+                           "UserParameters":{
+                              "Ref":"AWS::StackName"
                            }
                         },
                         "RunOrder":1
@@ -302,32 +210,16 @@
                               "Ref":"CodePipelineLambdaDummy"
                            },
                            "UserParameters":{
-                              "Fn::Join":[
-                                 "",
-                                 [
-                                    "http://",
-                                    {
-                                       "Fn::GetAtt":[
-                                          "CodeDeployEC2InstancesStack",
-                                          "Outputs.PublicIp"
-                                       ]
-                                    }
-                                 ]
-                              ]
+                              "Ref":"AWS::StackName"
                            }
                         },
                         "RunOrder":2
-                     }
-                  ]
-               },
-               {
-                  "Name":"LambdaStage",
-                  "Actions":[
+                     },
                      {
                         "InputArtifacts":[
 
                         ],
-                        "Name":"MyLambdaAction",
+                        "Name":"StaticAnalysis",
                         "ActionTypeId":{
                            "Category":"Invoke",
                            "Owner":"AWS",
@@ -339,21 +231,169 @@
                         ],
                         "Configuration":{
                            "FunctionName":{
-                              "Ref":"CodePipelineLambdaTest"
+                              "Ref":"CodePipelineLambdaDummy"
                            },
                            "UserParameters":{
-                              "Fn::Join":[
-                                 "",
-                                 [
-                                    "http://",
-                                    {
-                                       "Fn::GetAtt":[
-                                          "CodeDeployEC2InstancesStack",
-                                          "Outputs.PublicIp"
-                                       ]
-                                    }
-                                 ]
-                              ]
+                              "Ref":"AWS::StackName"
+                           }
+                        },
+                        "RunOrder":1
+                     }
+                  ]
+               },
+               {
+                  "Name":"Configure",
+                  "Actions":[
+                     {
+                        "InputArtifacts":[
+
+                        ],
+                        "Name":"LaunchEnvironment",
+                        "ActionTypeId":{
+                           "Category":"Invoke",
+                           "Owner":"AWS",
+                           "Version":"1",
+                           "Provider":"Lambda"
+                        },
+                        "OutputArtifacts":[
+
+                        ],
+                        "Configuration":{
+                           "FunctionName":{
+                              "Ref":"CodePipelineLambdaDummy"
+                           },
+                           "UserParameters":{
+                              "Ref":"AWS::StackName"
+                           }
+                        },
+                        "RunOrder":1
+                     },
+                     {
+                        "InputArtifacts":[
+
+                        ],
+                        "Name":"EnvironmentTest",
+                        "ActionTypeId":{
+                           "Category":"Invoke",
+                           "Owner":"AWS",
+                           "Version":"1",
+                           "Provider":"Lambda"
+                        },
+                        "OutputArtifacts":[
+
+                        ],
+                        "Configuration":{
+                           "FunctionName":{
+                              "Ref":"CodePipelineLambdaDummy"
+                           },
+                           "UserParameters":{
+                              "Ref":"AWS::StackName"
+                           }
+                        },
+                        "RunOrder":2
+                     }
+                  ]
+               },
+               {
+                  "Name":"Deploy",
+                  "Actions":[
+                     {
+                        "InputArtifacts":[
+
+                        ],
+                        "Name":"DeployApp",
+                        "ActionTypeId":{
+                           "Category":"Invoke",
+                           "Owner":"AWS",
+                           "Version":"1",
+                           "Provider":"Lambda"
+                        },
+                        "OutputArtifacts":[
+
+                        ],
+                        "Configuration":{
+                           "FunctionName":{
+                              "Ref":"CodePipelineLambdaDummy"
+                           },
+                           "UserParameters":{
+                              "Ref":"AWS::StackName"
+                           }
+                        },
+                        "RunOrder":1
+                     }
+                  ]
+               },
+               {
+                  "Name":"Test",
+                  "Actions":[
+                     {
+                        "InputArtifacts":[
+
+                        ],
+                        "Name":"AcceptanceTest",
+                        "ActionTypeId":{
+                           "Category":"Invoke",
+                           "Owner":"AWS",
+                           "Version":"1",
+                           "Provider":"Lambda"
+                        },
+                        "OutputArtifacts":[
+
+                        ],
+                        "Configuration":{
+                           "FunctionName":{
+                              "Ref":"CodePipelineLambdaDummy"
+                           },
+                           "UserParameters":{
+                              "Ref":"AWS::StackName"
+                           }
+                        },
+                        "RunOrder":1
+                     },
+                     {
+                        "InputArtifacts":[
+
+                        ],
+                        "Name":"ChaosTest",
+                        "ActionTypeId":{
+                           "Category":"Invoke",
+                           "Owner":"AWS",
+                           "Version":"1",
+                           "Provider":"Lambda"
+                        },
+                        "OutputArtifacts":[
+
+                        ],
+                        "Configuration":{
+                           "FunctionName":{
+                              "Ref":"CodePipelineLambdaDummy"
+                           },
+                           "UserParameters":{
+                              "Ref":"AWS::StackName"
+                           }
+                        },
+                        "RunOrder":1
+                     },
+                     {
+                        "InputArtifacts":[
+
+                        ],
+                        "Name":"SecurityTest",
+                        "ActionTypeId":{
+                           "Category":"Invoke",
+                           "Owner":"AWS",
+                           "Version":"1",
+                           "Provider":"Lambda"
+                        },
+                        "OutputArtifacts":[
+
+                        ],
+                        "Configuration":{
+                           "FunctionName":{
+                              "Ref":"CodePipelineLambdaDummy"
+                           },
+                           "UserParameters":{
+                              "Ref":"AWS::StackName"
                            }
                         },
                         "RunOrder":1
@@ -365,32 +405,24 @@
                   "Actions":[
                      {
                         "InputArtifacts":[
-                           {
-                              "Name":"MyApp"
-                           }
+
                         ],
-                        "Name":"Deploy-Second-Deployment",
+                        "Name":"SwitchEndpoints",
                         "ActionTypeId":{
-                           "Category":"Deploy",
+                           "Category":"Invoke",
                            "Owner":"AWS",
                            "Version":"1",
-                           "Provider":"CodeDeploy"
+                           "Provider":"Lambda"
                         },
                         "OutputArtifacts":[
 
                         ],
                         "Configuration":{
-                           "ApplicationName":{
-                              "Fn::GetAtt":[
-                                 "CodeDeploySimpleStack",
-                                 "Outputs.MyApplication"
-                              ]
+                           "FunctionName":{
+                              "Ref":"CodePipelineLambdaDummy"
                            },
-                           "DeploymentGroupName":{
-                              "Fn::GetAtt":[
-                                 "CodeDeploySimpleStack",
-                                 "Outputs.MyDeploymentGroup"
-                              ]
+                           "UserParameters":{
+                              "Ref":"AWS::StackName"
                            }
                         },
                         "RunOrder":1
@@ -415,7 +447,7 @@
       },
       "LambdaFunctionName":{
          "Value":{
-            "Ref":"CodePipelineLambdaTest"
+            "Ref":"CodePipelineLambdaDummy"
          }
       }
    }
