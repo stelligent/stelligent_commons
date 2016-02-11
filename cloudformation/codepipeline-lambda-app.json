@@ -187,30 +187,6 @@
                         "InputArtifacts":[
 
                         ],
-                        "Name":"DynamoDBSmall",
-                        "ActionTypeId":{
-                           "Category":"Invoke",
-                           "Owner":"AWS",
-                           "Version":"1",
-                           "Provider":"Lambda"
-                        },
-                        "OutputArtifacts":[
-
-                        ],
-                        "Configuration":{
-                           "FunctionName":{
-                              "Ref":"CodePipelineLambdaDummy"
-                           },
-                           "UserParameters":{
-                              "Ref":"AWS::StackName"
-                           }
-                        },
-                        "RunOrder":2
-                     },
-                     {
-                        "InputArtifacts":[
-
-                        ],
                         "Name":"StaticAnalysis",
                         "ActionTypeId":{
                            "Category":"Invoke",
@@ -336,7 +312,7 @@
                         "InputArtifacts":[
 
                         ],
-                        "Name":"AcceptanceTest",
+                        "Name":"DynamoDBSmall",
                         "ActionTypeId":{
                            "Category":"Invoke",
                            "Owner":"AWS",
@@ -355,6 +331,30 @@
                            }
                         },
                         "RunOrder":1
+                     },
+                     {
+                        "InputArtifacts":[
+
+                        ],
+                        "Name":"AcceptanceTest",
+                        "ActionTypeId":{
+                           "Category":"Invoke",
+                           "Owner":"AWS",
+                           "Version":"1",
+                           "Provider":"Lambda"
+                        },
+                        "OutputArtifacts":[
+
+                        ],
+                        "Configuration":{
+                           "FunctionName":{
+                              "Ref":"CodePipelineLambdaDummy"
+                           },
+                           "UserParameters":{
+                              "Ref":"AWS::StackName"
+                           }
+                        },
+                        "RunOrder":2
                      },
                      {
                         "InputArtifacts":[
@@ -378,7 +378,7 @@
                               "Ref":"AWS::StackName"
                            }
                         },
-                        "RunOrder":1
+                        "RunOrder":2
                      },
                      {
                         "InputArtifacts":[
@@ -402,7 +402,7 @@
                               "Ref":"AWS::StackName"
                            }
                         },
-                        "RunOrder":1
+                        "RunOrder":2
                      }
                   ]
                },
@@ -413,7 +413,7 @@
                         "InputArtifacts":[
 
                         ],
-                        "Name":"UpdateProdLikeDatabase",
+                        "Name":"UpdateProdLikeDB",
                         "ActionTypeId":{
                            "Category":"Invoke",
                            "Owner":"AWS",
