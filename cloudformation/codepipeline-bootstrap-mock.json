@@ -126,7 +126,7 @@
                         "InputArtifacts":[
 
                         ],
-                        "Name":"Source",
+                        "Name":"CodeCommit",
                         "ActionTypeId":{
                            "Category":"Source",
                            "Owner":"AWS",
@@ -224,12 +224,31 @@
                            }
                         },
                         "RunOrder":1
-                     }
-                  ]
-               },
-               {
-                  "Name":"NetworkInterface",
-                  "Actions":[
+                     },
+                     {
+                        "InputArtifacts":[
+
+                        ],
+                        "Name":"PipelineStore",
+                        "ActionTypeId":{
+                           "Category":"Invoke",
+                           "Owner":"AWS",
+                           "Version":"1",
+                           "Provider":"Lambda"
+                        },
+                        "OutputArtifacts":[
+
+                        ],
+                        "Configuration":{
+                           "FunctionName":{
+                              "Ref":"CodePipelineLambdaDummy"
+                           },
+                           "UserParameters":{
+                              "Ref":"AWS::StackName"
+                           }
+                        },
+                        "RunOrder":3
+                     },
                      {
                         "InputArtifacts":[
 
@@ -252,13 +271,90 @@
                               "Ref":"AWS::StackName"
                            }
                         },
-                        "RunOrder":1
+                        "RunOrder":2
                      }
                   ]
                },
                {
-                  "Name":"CodePipeline",
+                  "Name":"SupportTools",
                   "Actions":[
+                     {
+                        "InputArtifacts":[
+
+                        ],
+                        "Name":"CloudWatchLogs",
+                        "ActionTypeId":{
+                           "Category":"Invoke",
+                           "Owner":"AWS",
+                           "Version":"1",
+                           "Provider":"Lambda"
+                        },
+                        "OutputArtifacts":[
+
+                        ],
+                        "Configuration":{
+                           "FunctionName":{
+                              "Ref":"CodePipelineLambdaDummy"
+                           },
+                           "UserParameters":{
+                              "Ref":"AWS::StackName"
+                           }
+                        },
+                        "RunOrder":1
+                     },
+                     {
+                        "InputArtifacts":[
+
+                        ],
+                        "Name":"EC2",
+                        "ActionTypeId":{
+                           "Category":"Invoke",
+                           "Owner":"AWS",
+                           "Version":"1",
+                           "Provider":"Lambda"
+                        },
+                        "OutputArtifacts":[
+
+                        ],
+                        "Configuration":{
+                           "FunctionName":{
+                              "Ref":"CodePipelineLambdaDummy"
+                           },
+                           "UserParameters":{
+                              "Ref":"AWS::StackName"
+                           }
+                        },
+                        "RunOrder":2
+                     }
+                  ]
+               },
+               {
+                  "Name":"ContinuousDelivery",
+                  "Actions":[
+                     {
+                        "InputArtifacts":[
+
+                        ],
+                        "Name":"Jenkins",
+                        "ActionTypeId":{
+                           "Category":"Invoke",
+                           "Owner":"AWS",
+                           "Version":"1",
+                           "Provider":"Lambda"
+                        },
+                        "OutputArtifacts":[
+
+                        ],
+                        "Configuration":{
+                           "FunctionName":{
+                              "Ref":"CodePipelineLambdaDummy"
+                           },
+                           "UserParameters":{
+                              "Ref":"AWS::StackName"
+                           }
+                        },
+                        "RunOrder":1
+                     },
                      {
                         "InputArtifacts":[
 
@@ -323,6 +419,23 @@
       "StackName":{
          "Value":{
             "Ref":"AWS::StackName"
+         }
+      },
+      "CodePipelineURL":{
+         "Value":{
+            "Fn::Join":[
+               "",
+               [
+                  "https://console.aws.amazon.com/codepipeline/home?region=",
+                  {
+                     "Ref":"AWS::Region"
+                  },
+                  "#/view/",
+                  {
+                     "Ref":"CodePipelineStack"
+                  }
+               ]
+            ]
          }
       },
       "LambdaFunctionName":{
