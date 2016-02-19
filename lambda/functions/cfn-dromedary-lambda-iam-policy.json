@@ -1,0 +1,30 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cloudformation:CreateStack",
+                "cloudformation:DescribeStacks",
+                "cloudformation:DescribeStackEvents",
+                "cloudformation:DescribeStackResources",
+                "cloudformation:GetTemplate",
+                "cloudformation:ValidateTemplate",
+                "cloudwatch:*",
+                "codepipeline:*",
+                "config:*",
+                "dynamodb:*",
+                "ec2:*",
+                "iam:*",
+                "lambda:*",
+                "logs:*",
+                "route53:*",
+                "s3:*",
+                "sns:*",
+                "sqs:*",
+                "vpc:*"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
