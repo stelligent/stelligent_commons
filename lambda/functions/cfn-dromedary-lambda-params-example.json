@@ -1,0 +1,8 @@
+{
+  "BaseTemplateURL": "https://s3.amazonaws.com/stelligent-training-public/master/",
+  "TemplateURL": "https://s3.amazonaws.com/stelligent-training-public/master/dromedary-master.json",
+  "KeyName": "YOUR_KEY_NAME",
+  "Branch": "YOUR_DROMEDARY_BRANCH",
+  "GitHubToken": "YOUR_GITHUB_TOKEN",
+  "ProdHostedZone": ".YOUR_HOSTED_ZONE",
+}
