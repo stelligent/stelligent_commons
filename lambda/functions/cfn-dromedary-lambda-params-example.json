@@ -1,4 +1,5 @@
 {
+  "NotificationArn": "arn:aws:sns:REGION:ACCOUNTID:SNSTOPICNAME",
   "BaseTemplateURL": "https://s3.amazonaws.com/stelligent-training-public/master/",
   "TemplateURL": "https://s3.amazonaws.com/stelligent-training-public/master/dromedary-master.json",
   "KeyName": "YOUR_KEY_NAME",

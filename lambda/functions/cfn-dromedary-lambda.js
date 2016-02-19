@@ -10,6 +10,7 @@ exports.handler = function(event, context) {
   var params = {
     StackName: myStackName,
     Capabilities: ['CAPABILITY_IAM'],
+    NotificationARNs: [event.NotificationArn],
     TemplateURL: event.TemplateURL,
     DisableRollback: true,
     Parameters: [
