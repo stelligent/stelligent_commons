@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion":"2010-09-09",
-  "Description":"Stelligent CloudFormation Sample Template for Static Web Server. You will be billed for the AWS resources used if you create a stack from this template.",
+  "Description":"Stelligent CloudFormation Sample Template Static Web Server: Launches OpsWorks stack, layer, instances and associated resources to run a Node.js application provided by AWS. ** This template creates one or more Amazon EC2 instances. You will be billed for the AWS resources used if you create a stack from this template.",
   "Parameters":{
     "ServiceRole":{
       "Default":"aws-opsworks-service-role",
@@ -31,6 +31,32 @@
     }
   },
   "Resources":{
+    "MySNSTopic":{
+      "Type":"AWS::SNS::Topic",
+      "Properties":{
+        "Subscription":[
+          {
+            "Endpoint":{
+              "Fn::GetAtt":[
+                "MyQueue1",
+                "Arn"
+              ]
+            },
+            "Protocol":"sqs"
+          },
+          {
+            "Endpoint":{
+              "Fn::GetAtt":[
+                "MyQueue2",
+                "Arn"
+              ]
+            },
+            "Protocol":"sqs"
+          }
+        ],
+        "TopicName":"SampleTopic"
+      }
+    },
     "myStack":{
       "Type":"AWS::OpsWorks::Stack",
       "Properties":{
@@ -77,7 +103,7 @@
         "UseOpsworksSecurityGroups":"true",
         "CustomCookbooksSource":{
           "Type":"archive",
-          "Url":"https://s3.amazonaws.com/opsworks-demo-assets/opsworks-linux-demo-cookbooks-nodejs.tar.gz"
+          "Url":"https://s3.amazonaws.com/stelligent-training-public/public/codepipeline/aws-codepipeline-s3-aws-codedeploy_linux.zip"
         }
       }
     },
@@ -88,8 +114,8 @@
         "StackId":{
           "Ref":"myStack"
         },
-        "Type":"custom",
-        "Shortname":"nodejs-server",
+        "Type":"web",
+        "Shortname":"web",
         "EnableAutoHealing":"true",
         "AutoAssignElasticIps":"false",
         "AutoAssignPublicIps":"true",
@@ -101,12 +127,7 @@
             ]
           }
         ],
-        "Name":"MyNodeApp",
-        "CustomRecipes":{
-          "Deploy":[
-            "nodejs_demo"
-          ]
-        }
+        "Name":"MyStaticApp"
       }
     },
     "myAppInstance1":{
@@ -142,14 +163,14 @@
         "StackId":{
           "Ref":"myStack"
         },
-        "Type":"other",
-        "Shortname":"nodejs_sample_app",
+        "Type":"static",
+        "Shortname":"web",
         "Name":{
           "Ref":"AppName"
         },
         "AppSource":{
-          "Type":"git",
-          "Url":"git://github.com/awslabs/opsworks-windows-demo-nodejs.git"
+          "Type":"archive",
+          "Url":"https://s3.amazonaws.com/stelligent-training-public/public/codepipeline/aws-codepipeline-s3-aws-codedeploy_linux.zip"
         }
       }
     }
