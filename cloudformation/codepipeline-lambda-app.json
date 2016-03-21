@@ -157,6 +157,34 @@
                   ]
                },
                {
+                  "Name":"GhostTest",
+                  "Actions":[
+                     {
+                        "InputArtifacts":[
+                           {
+                              "Name":"MyApp"
+                           }
+                        ],
+                        "Name":"ui-testing",
+                        "ActionTypeId":{
+                           "Category":"Test",
+                           "Owner":"ThirdParty",
+                           "Version":"1",
+                           "Provider":"GhostInspector"
+                        },
+                        "OutputArtifacts":[
+
+                        ],
+                        "Configuration":{
+                           "TestId":"56d89cd11a6744a446a04b66",
+                           "ClientId":"5ff1cf10-f0e1-4203-b06f-6ac9c8d4dda9",
+                           "ClientToken":"d2e2e6a1b7bfa0fd7514a6637ad3684e844119fe"
+                        },
+                        "RunOrder":1
+                     }
+                  ]
+               },
+               {
                   "Name":"Commit",
                   "Actions":[
                      {

@@ -17,12 +17,12 @@
       "ConstraintDescription": "Can contain only ASCII characters."
     },
     "KeyPairName": {
-      "Description": "Name of an existing Amazon EC2 key pair to enable SSH or RDP access to the instances.",
-      "Type": "String",
-      "MinLength": "1",
-      "MaxLength": "255",
-      "AllowedPattern": "[\\x20-\\x7E]*",
-      "ConstraintDescription": "KeyPairName is a required Field and can contain only ASCII characters."
+      "Description":"Name of an existing Amazon EC2 key pair to enable SSH or RDP access to the instances.",
+      "Type":"AWS::EC2::KeyPair::KeyName",
+      "MinLength":"1",
+      "MaxLength":"255",
+      "AllowedPattern":"[\\x20-\\x7E]*",
+      "ConstraintDescription":"Can contain only ASCII characters."
     },
     "InstanceType": {
       "Description": "Amazon EC2 instance type.",
