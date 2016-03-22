@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion":"2010-09-09",
-  "Description":"EC2 Utility Instance for running commands. Also installs EC2 SSM agent on the instance.",
+  "Description":"EC2 Utility Instance for running commands. Installs and configures CloudWatch Log and EC2 SSM agent.",
   "Parameters":{
     "KeyName":{
       "Description":"Name of an existing EC2 KeyPair to enable SSH access to the instances",
