@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion":"2010-09-09",
   "Description":"Create SNS and Lambda resources ** This template creates one or more Amazon resources. You will be billed for the AWS resources used if you create a stack from this template.",
-    "Parameters":{
+  "Parameters":{
     "S3Bucket":{
       "Type":"String",
       "Description":"S3 bucket to use for artifacts. Just bucket Name; not URL. IAM user should have access to the bucket.",
@@ -11,6 +11,11 @@
       "Type":"String",
       "Description":"S3 key within S3Bucket.",
       "Default":"public/codepipeline/aws-codepipeline-s3-aws-codedeploy_linux.zip"
+    },
+    "OpsWorksBucketARN":{
+      "Type":"String",
+      "Description":"S3 bucket to use for artifacts. Just bucket Name; not URL. IAM user should have access to the bucket.",
+      "Default":"arn:aws:s3:::pmd-opsworks-artifacts"
     }
   },
   "Resources":{
@@ -116,7 +121,9 @@
             "Protocol":"lambda"
           }
         ],
-        "TopicName":"SampleTopic"
+        "TopicName":{
+          "Ref":"AWS::StackName"
+        }
       }
     },
     "mysnspolicy":{
@@ -126,17 +133,54 @@
       ],
       "Properties":{
         "PolicyDocument":{
-          "Id":"MyTopicPolicy",
+          "Id":"__default_policy_ID",
           "Version":"2012-10-17",
           "Statement":[
             {
-              "Sid":"My-statement-id",
+              "Sid":"_s3",
               "Effect":"Allow",
               "Principal":{
                 "AWS":"*"
               },
-              "Action":"sns:Publish",
-              "Resource":"*"
+              "Action":"SNS:Publish",
+              "Resource":{
+                "Ref":"MySNSTopic"
+              },
+              "Condition":{
+                "StringEquals":{
+                  "aws:SourceArn":{
+                    "Ref":"OpsWorksBucketARN"
+                  }
+                }
+              }
+            },
+            {
+              "Sid":"__default_statement_ID",
+              "Effect":"Allow",
+              "Principal":{
+                "AWS":"*"
+              },
+              "Action":[
+                "SNS:Subscribe",
+                "SNS:ListSubscriptionsByTopic",
+                "SNS:DeleteTopic",
+                "SNS:GetTopicAttributes",
+                "SNS:Publish",
+                "SNS:RemovePermission",
+                "SNS:AddPermission",
+                "SNS:Receive",
+                "SNS:SetTopicAttributes"
+              ],
+              "Resource":{
+                "Ref":"MySNSTopic"
+              },
+              "Condition":{
+                "StringEquals":{
+                  "AWS:SourceOwner":{
+                    "Ref":"AWS::AccountId"
+                  }
+                }
+              }
             }
           ]
         },
@@ -152,6 +196,16 @@
     "MyAWSAccountId":{
       "Value":{
         "Ref":"AWS::AccountId"
+      }
+    },
+    "SNSTopicARN":{
+      "Value":{
+        "Ref":"MySNSTopic"
+      }
+    },
+    "SNSLambdaFunction":{
+      "Value":{
+        "Ref":"SNSLambdaFunction"
       }
     }
   }
