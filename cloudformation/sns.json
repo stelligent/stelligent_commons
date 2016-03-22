@@ -80,28 +80,33 @@
     },
     "SNSLambdaFunction":{
       "Type":"AWS::Lambda::Function",
-      "DependsOn":[
-        "SNSLambdaRole",
-        "LambdaSNSExecutionPolicy"
-      ],
       "Properties":{
         "Code":{
-          "S3Bucket":{
-            "Ref":"S3Bucket"
-          },
-          "S3Key":"Archive.zip"
+          "ZipFile":{
+            "Fn::Join":[
+              "\n",
+              [
+                "console.log('Loading function');",
+                "exports.handler = function(event, context) {",
+                "    console.log('value1 =', event.key1);",
+                "    console.log('value2 =', event.key2);",
+                "    console.log('value3 =', event.key3);",
+                "    context.succeed(event.key1);  // Echo back the first key value",
+                "    // context.fail('Something went wrong');",
+                "};"
+              ]
+            ]
+          }
         },
+        "Handler":"index.handler",
+        "Runtime":"nodejs",
+        "Timeout":"30",
         "Role":{
           "Fn::GetAtt":[
             "SNSLambdaRole",
             "Arn"
           ]
-        },
-        "Description":"Always return success",
-        "Timeout":20,
-        "Handler":"lambdadummy.handler",
-        "Runtime":"nodejs",
-        "MemorySize":128
+        }
       }
     },
     "MySNSTopic":{
@@ -123,6 +128,25 @@
         ],
         "TopicName":{
           "Ref":"AWS::StackName"
+        }
+      }
+    },
+    "LambdaInvokePermission":{
+      "Type":"AWS::Lambda::Permission",
+      "DependsOn":[
+        "SNSLambdaFunction"
+      ],
+      "Properties":{
+        "FunctionName":{
+          "Fn::GetAtt":[
+            "SNSLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action":"lambda:InvokeFunction",
+        "Principal":"sns.amazonaws.com",
+        "SourceAccount":{
+          "Ref":"AWS::AccountId"
         }
       }
     },
