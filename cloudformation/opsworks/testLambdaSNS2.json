@@ -1,0 +1,118 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "Example CFN template to add an Lambda function as a Subscription of an SNS Topic.",
+
+  "Resources" : {
+    "TestSNSTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "Subscription": [ {
+          "Endpoint":  { "Fn::GetAtt" : [ "ProcessSNSMessages", "Arn" ] },
+          "Protocol": "lambda"
+          } ],
+          "TopicName": "TestSNSTopic4"
+        }
+      },
+      "LambdaInvokePermission": {
+        "DependsOn": [
+          "ProcessSNSMessages"
+        ],
+        "Properties": {
+          "Action": "lambda:InvokeFunction",
+          "FunctionName": {
+            "Fn::GetAtt": [
+              "ProcessSNSMessages",
+              "Arn"
+            ]
+          },
+          "Principal": "sns.amazonaws.com"
+        },
+        "Type": "AWS::Lambda::Permission"
+      },
+      "ProcessSNSMessages": {
+        "Type": "AWS::Lambda::Function",
+        "Properties": {
+          "Handler": "index.handler",
+          "Role": { "Fn::GetAtt" : [ "LambdaExecutionRole", "Arn" ] },
+          "Code": {
+            "ZipFile":  { "Fn::Join": ["\n", [
+              "console.log('Loading function');",
+              "exports.handler = function(event, context) {",
+                "var mymsg = JSON.parse(event.Records[0].Sns.Message);",
+                "    console.log('value1 =', mymsg.key1);",
+                "    console.log('value2 =', mymsg.key2);",
+                "    console.log('value3 =', mymsg.key3);",
+                "    context.succeed(mymsg.key1);  // Echo back the first key value",
+                "    // context.fail('Something went wrong');",
+                "};"
+                ]]}
+              },
+              "Runtime": "nodejs",
+              "Timeout": "25"
+            }
+          },
+          "LambdaExecutionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Sid": "",
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": "lambda.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                  }
+                ]
+              },
+              "Policies": [ {
+                "PolicyName": "root",
+                "PolicyDocument": {
+                  "Version" : "2012-10-17",
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "logs:*"
+                      ],
+                      "Resource": "arn:aws:logs:*:*:*"
+                    },
+                    {
+                      "Effect": "Allow",
+                      "Action": [
+                        "lambda:AddPermission"
+                      ],
+                      "Resource": [
+                        "*"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "mysnspolicy" : {
+           "Type" : "AWS::SNS::TopicPolicy",
+           "Properties" : {
+              "PolicyDocument" :  {
+                 "Id" : "MyTopicPolicy",
+                 "Version" : "2012-10-17",
+                 "Statement" : [ {
+                    "Sid" : "My-statement-id",
+                    "Effect" : "Allow",
+                    "Principal" : {
+                       "AWS" : "*"
+                    },
+                    "Action" : "sns:Publish",
+                    "Resource" : "*"
+                 } ]
+              },
+              "Topics" : [ { "Ref" : "TestSNSTopic" } ]
+           }
+        }
+      }
+    }
