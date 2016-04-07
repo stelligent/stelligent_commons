@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion":"2010-09-09",
-  "Description": "Launch ECS Cluster and Tasks for Simple App"
+  "Description":"Launch ECS Cluster, Containers and Tasks for Simple App via ELB",
   "Parameters":{
     "KeyName":{
       "Type":"AWS::EC2::KeyPair::KeyName",
@@ -108,7 +108,9 @@
     "SourceSG":{
       "Type":"AWS::EC2::SecurityGroup",
       "Properties":{
-        "VpcId":{"Ref": "VPCID"},
+        "VpcId":{
+          "Ref":"VPCID"
+        },
         "GroupDescription":"Sample source security group",
         "SecurityGroupIngress":[
           {
@@ -131,7 +133,9 @@
     "TargetSG":{
       "Type":"AWS::EC2::SecurityGroup",
       "Properties":{
-        "VpcId":{"Ref": "VPCID"},
+        "VpcId":{
+          "Ref":"VPCID"
+        },
         "GroupDescription":"ALL Inbound TCP - Source Restricted to SourceSG",
         "SecurityGroupIngress":[
           {
@@ -221,7 +225,7 @@
             "Name":"busybox",
             "Cpu":10,
             "Command":[
-              "/bin/sh -c \"while true; do echo '<html> <head> <title>Amazon ECS Sample App</title> <style>body {margin-top: 40px; background-color: #333;} </style> </head><body> <div style=color:white;text-align:center> <h1>Amazon ECS Sample App</h1> <h2>Congratulations!</h2> <p>Your application is now running on a container in Amazon ECS.</p>' > top; /bin/date > date ; echo '</div></body></html>' > bottom; cat top date bottom > /usr/local/apache2/htdocs/index.html ; sleep 1; done\""
+              "/bin/sh -c \"while true; do echo '<html> <head> <title>Amazon ECS Sample App</title> <style>body {margin-top: 40px; background-color: #cd6600;} </style> </head><body> <div style=color:white;text-align:center> <h1>Amazon ECS Sample App</h1> <h2>Congratulations!</h2> <p>Your application is now running on a container in Amazon ECS.</p>' > top; /bin/date > date ; echo '</div></body></html>' > bottom; cat top date bottom > /usr/local/apache2/htdocs/index.html ; sleep 1; done\""
             ],
             "EntryPoint":[
               "sh",
@@ -255,6 +259,14 @@
             "LoadBalancerPort":"80",
             "InstancePort":"80",
             "Protocol":"HTTP"
+          }
+        ],
+        "SecurityGroups":[
+          {
+            "Ref":"SourceSG"
+          },
+          {
+            "Ref":"TargetSG"
           }
         ],
         "HealthCheck":{
@@ -493,6 +505,7 @@
         "Path":"/",
         "Policies":[
           {
+            
             "PolicyName":"ecs-service",
             "PolicyDocument":{
               "Statement":[
@@ -568,6 +581,23 @@
     }
   },
   "Outputs":{
+    "DNS":{
+      "Value":{
+        "Fn::Join":[
+          "",
+          [
+            "http://",
+            {
+              "Fn::GetAtt":[
+                "EcsElasticLoadBalancer",
+                "DNSName"
+              ]
+            },
+            "/"
+          ]
+        ]
+      }
+    },
     "SourceSecurityGroupId":{
       "Value":{
         "Fn::GetAtt":[
