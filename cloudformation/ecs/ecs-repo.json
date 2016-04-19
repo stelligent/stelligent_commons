@@ -2,10 +2,6 @@
   "AWSTemplateFormatVersion":"2010-09-09",
   "Description":"Stelligent CloudFormation Sample Template ** This template creates one or more Amazon resources. You will be billed for the AWS resources used if you create a stack from this template.",
   "Parameters":{
-    "ECSRepositoryName":{
-      "Type":"String",
-      "Description":"Unique name for the ECS Repository"
-    },
     "IAMUsername":{
       "Type":"String",
       "Description":"IAM username"
@@ -16,7 +12,7 @@
       "Type":"AWS::ECR::Repository",
       "Properties":{
         "RepositoryName":{
-          "Ref":"ECSRepositoryName"
+          "Ref":"AWS::StackName"
         },
         "RepositoryPolicyText":{
           "Version":"2008-10-17",
@@ -59,9 +55,9 @@
     }
   },
   "Outputs":{
-    "MyAWSAccountId":{
+    "MyRepository":{
       "Value":{
-        "Ref":"AWS::AccountId"
+        "Ref":"MyRepository"
       }
     }
   }
