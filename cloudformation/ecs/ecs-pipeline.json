@@ -10,6 +10,15 @@
       "Type":"AWS::EC2::VPC::Id",
       "Description":"A VPC ID"
     },
+    "ECSRepoName":{
+      "Type":"String",
+      "Description":"The name of the ECR Repo"
+    },
+    "ImageTag":{
+      "Type":"String",
+      "Description":"The version of the image tag",
+      "Default":"latest"
+    },
     "SubnetID":{
       "Type":"List<AWS::EC2::Subnet::Id>",
       "Description":"List of an existing subnet IDs to use for the load balancer and auto scaling group"
@@ -198,45 +207,37 @@
     "ECSCluster":{
       "Type":"AWS::ECS::Cluster"
     },
-    "taskdefinition":{
+    "PHPTaskDefinition":{
       "Type":"AWS::ECS::TaskDefinition",
       "Properties":{
         "ContainerDefinitions":[
           {
-            "Name":"simple-app",
+            "Name":"php-simple-app",
             "Cpu":"10",
             "Essential":"true",
-            "Image":"httpd:2.4",
+            "Image":{
+              "Fn::Join":[
+                "",
+                [
+                  {
+                    "Ref":"AWS::AccountId"
+                  },
+                  ".dkr.ecr.us-east-1.amazonaws.com/",
+                  {
+                    "Ref":"ECSRepoName"
+                  },
+                  ":",
+                  {
+                    "Ref":"ImageTag"
+                  }
+                ]
+              ]
+            },
             "Memory":"300",
-            "MountPoints":[
-              {
-                "ContainerPath":"/usr/local/apache2/htdocs",
-                "SourceVolume":"my-vol"
-              }
-            ],
             "PortMappings":[
               {
                 "HostPort":80,
                 "ContainerPort":80
-              }
-            ]
-          },
-          {
-            "Name":"busybox",
-            "Cpu":10,
-            "Command":[
-              "/bin/sh -c \"while true; do echo '<html> <head> <title>Amazon ECS Sample App</title> <style>body {margin-top: 40px; background-color: #cd6600;} </style> </head><body> <div style=color:white;text-align:center> <h1>Amazon ECS Sample App</h1> <h2>Congratulations!</h2> <p>Your application is now running on a container in Amazon ECS.</p>' > top; /bin/date > date ; echo '</div></body></html>' > bottom; cat top date bottom > /usr/local/apache2/htdocs/index.html ; sleep 1; done\""
-            ],
-            "EntryPoint":[
-              "sh",
-              "-c"
-            ],
-            "Essential":false,
-            "Image":"busybox",
-            "Memory":200,
-            "VolumesFrom":[
-              {
-                "SourceContainer":"simple-app"
               }
             ]
           }
@@ -469,7 +470,7 @@
         "DesiredCount":"1",
         "LoadBalancers":[
           {
-            "ContainerName":"simple-app",
+            "ContainerName":"php-simple-app",
             "ContainerPort":"80",
             "LoadBalancerName":{
               "Ref":"EcsElasticLoadBalancer"
@@ -480,7 +481,7 @@
           "Ref":"ECSServiceRole"
         },
         "TaskDefinition":{
-          "Ref":"taskdefinition"
+          "Ref":"PHPTaskDefinition"
         }
       }
     },
@@ -505,7 +506,6 @@
         "Path":"/",
         "Policies":[
           {
-            
             "PolicyName":"ecs-service",
             "PolicyDocument":{
               "Statement":[
@@ -558,6 +558,7 @@
                     "ecs:DeregisterContainerInstance",
                     "ecs:DiscoverPollEndpoint",
                     "ecs:Submit*",
+                    "ecr:*",
                     "ecs:Poll"
                   ],
                   "Resource":"*"
@@ -626,7 +627,7 @@
     },
     "taskdef":{
       "Value":{
-        "Ref":"taskdefinition"
+        "Ref":"PHPTaskDefinition"
       }
     }
   }
