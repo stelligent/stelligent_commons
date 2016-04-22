@@ -4,6 +4,7 @@
   "Parameters":{
     "S3Bucket":{
       "Type":"String",
+      "Default": "aws-codedeploy-us-east-1"
       "Description":"The unique bucket name where deployment distribution is located"
     },
     "S3Key":{
