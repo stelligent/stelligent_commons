@@ -48,6 +48,104 @@
     }
   },
   "Resources":{
+    "CodePipelineRole":{
+      "Type":"AWS::IAM::Role",
+      "Properties":{
+        "AssumeRolePolicyDocument":{
+          "Statement":[
+            {
+              "Effect":"Allow",
+              "Principal":{
+                "Service":[
+                  "codepipeline.amazonaws.com"
+                ]
+              },
+              "Action":[
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path":"/",
+        "Policies":[
+          {
+            "PolicyName":"codepipeline-service",
+            "PolicyDocument":{
+              "Statement":[
+                {
+                  "Action":[
+                    "codecommit:GetBranch",
+                    "codecommit:GetCommit",
+                    "codecommit:UploadArchive",
+                    "codecommit:GetUploadArchiveStatus",
+                    "codecommit:CancelUploadArchive"
+                  ],
+                  "Resource":"*",
+                  "Effect":"Allow"
+                },
+                {
+                  "Action":[
+                    "s3:GetObject",
+                    "s3:GetObjectVersion",
+                    "s3:GetBucketVersioning"
+                  ],
+                  "Resource":"*",
+                  "Effect":"Allow"
+                },
+                {
+                  "Action":[
+                    "s3:PutObject"
+                  ],
+                  "Resource":[
+                    "arn:aws:s3:::codepipeline*",
+                    "arn:aws:s3:::elasticbeanstalk*"
+                  ],
+                  "Effect":"Allow"
+                },
+                {
+                  "Action":[
+                    "codedeploy:CreateDeployment",
+                    "codedeploy:GetApplicationRevision",
+                    "codedeploy:GetDeployment",
+                    "codedeploy:GetDeploymentConfig",
+                    "codedeploy:RegisterApplicationRevision"
+                  ],
+                  "Resource":"*",
+                  "Effect":"Allow"
+                },
+                {
+                  "Action":[
+                    "elasticbeanstalk:*",
+                    "ec2:*",
+                    "elasticloadbalancing:*",
+                    "autoscaling:*",
+                    "cloudwatch:*",
+                    "s3:*",
+                    "sns:*",
+                    "cloudformation:*",
+                    "rds:*",
+                    "sqs:*",
+                    "ecs:*",
+                    "iam:PassRole"
+                  ],
+                  "Resource":"*",
+                  "Effect":"Allow"
+                },
+                {
+                  "Action":[
+                    "lambda:InvokeFunction",
+                    "lambda:ListFunctions"
+                  ],
+                  "Resource":"*",
+                  "Effect":"Allow"
+                }
+              ],
+              "Version":"2012-10-17"
+            }
+          }
+        ]
+      }
+    },
     "CodeDeployEC2InstancesStack":{
       "Type":"AWS::CloudFormation::Stack",
       "Properties":{
@@ -120,7 +218,10 @@
               {
                 "Ref":"AWS::AccountId"
               },
-              ":role/AWS-CodePipeline-Service"
+              ":role/",
+              {
+                "Ref":"CodePipelineRole"
+              }
             ]
           ]
         },
@@ -210,6 +311,11 @@
     }
   },
   "Outputs":{
+    "CodePipelineRole":{
+      "Value":{
+        "Ref":"CodePipelineRole"
+      }
+    },
     "PipelineUrl":{
       "Value":{
         "Fn::Join":[
