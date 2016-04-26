@@ -55,7 +55,7 @@
     }
   },
   "Outputs":{
-    "MyRepository":{
+    "ECSRepository":{
       "Value":{
         "Ref":"MyRepository"
       }

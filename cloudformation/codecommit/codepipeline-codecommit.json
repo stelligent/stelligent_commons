@@ -1,5 +1,5 @@
 {
-  "Description":"Launch nested CloudFormation stack to provision and run AWS CodeDeploy",
+  "Description":"Integrate CodeCommit with CodePipeline to orchestrate a CodeDeploy deployment. **WARNING** This template creates one or more Amazon EC2 instances. You will be billed for the AWS resources used if you create a stack from this template.",
   "AWSTemplateFormatVersion":"2010-09-09",
   "Parameters":{
     "S3Bucket":{
@@ -39,12 +39,43 @@
       "ConstraintDescription":"Can contain only ASCII characters."
     },
     "EC2KeyPairName":{
-      "Description":"Name of an existing Amazon EC2 key pair to enable SSH or RDP access to the instances.",
+      "Description":"Name of an existing Amazon EC2 key pair to enable SSH access to the instances.",
       "Type":"AWS::EC2::KeyPair::KeyName",
       "MinLength":"1",
       "MaxLength":"255",
       "AllowedPattern":"[\\x20-\\x7E]*",
       "ConstraintDescription":"Can contain only ASCII characters."
+    }
+  },
+  "Metadata":{
+    "AWS::CloudFormation::Interface":{
+      "ParameterGroups":[
+        {
+          "Label":{
+            "default":"Dynamic Configuration"
+          },
+          "Parameters":[
+            "EC2KeyPairName",
+            "RepositoryName",
+            "RepositoryBranch",
+            "TagValue"
+          ]
+        }
+      ],
+      "ParameterLabels":{
+        "EC2KeyPairName":{
+          "default":"EC2 KeyPair Name"
+        },
+        "RepositoryName":{
+          "default":"CodeCommit Repository Name"
+        },
+        "RepositoryBranch":{
+          "default":"CodeCommit Repository Branch"
+        },
+        "TagValue":{
+          "default":"Tag Value for CodeDeploy EC2 instances"
+        }
+      }
     }
   },
   "Resources":{
@@ -311,6 +342,11 @@
     }
   },
   "Outputs":{
+    "CodeDeployDeploymentGroup":{
+      "Value":{
+        "Ref":"MyDeploymentGroup"
+      }
+    },
     "CodePipelineRole":{
       "Value":{
         "Ref":"CodePipelineRole"

@@ -204,10 +204,10 @@
         }
       }
     },
-    "ECSCluster":{
+    "EcsCluster":{
       "Type":"AWS::ECS::Cluster"
     },
-    "PHPTaskDefinition":{
+    "PhpTaskDefinition":{
       "Type":"AWS::ECS::TaskDefinition",
       "Properties":{
         "ContainerDefinitions":[
@@ -249,7 +249,7 @@
         ]
       }
     },
-    "EcsElasticLoadBalancer":{
+    "EcsElb":{
       "Type":"AWS::ElasticLoadBalancing::LoadBalancer",
       "Properties":{
         "Subnets":{
@@ -324,7 +324,7 @@
                       "#!/bin/bash\n",
                       "echo ECS_CLUSTER=",
                       {
-                        "Ref":"ECSCluster"
+                        "Ref":"EcsCluster"
                       },
                       " >> /etc/ecs/ecs.config"
                     ]
@@ -458,14 +458,14 @@
         }
       }
     },
-    "service":{
+    "EcsService":{
       "Type":"AWS::ECS::Service",
       "DependsOn":[
         "ECSAutoScalingGroup"
       ],
       "Properties":{
         "Cluster":{
-          "Ref":"ECSCluster"
+          "Ref":"EcsCluster"
         },
         "DesiredCount":"1",
         "LoadBalancers":[
@@ -473,19 +473,19 @@
             "ContainerName":"php-simple-app",
             "ContainerPort":"80",
             "LoadBalancerName":{
-              "Ref":"EcsElasticLoadBalancer"
+              "Ref":"EcsElb"
             }
           }
         ],
         "Role":{
-          "Ref":"ECSServiceRole"
+          "Ref":"EcsServiceRole"
         },
         "TaskDefinition":{
-          "Ref":"PHPTaskDefinition"
+          "Ref":"PhpTaskDefinition"
         }
       }
     },
-    "ECSServiceRole":{
+    "EcsServiceRole":{
       "Type":"AWS::IAM::Role",
       "Properties":{
         "AssumeRolePolicyDocument":{
@@ -582,7 +582,7 @@
     }
   },
   "Outputs":{
-    "DNS":{
+    "AppURL":{
       "Value":{
         "Fn::Join":[
           "",
@@ -590,7 +590,7 @@
             "http://",
             {
               "Fn::GetAtt":[
-                "EcsElasticLoadBalancer",
+                "EcsElb",
                 "DNSName"
               ]
             },
@@ -607,7 +607,7 @@
         ]
       }
     },
-    "GroupId":{
+    "TargetSecurityGroupId":{
       "Value":{
         "Fn::GetAtt":[
           "TargetSG",
@@ -615,19 +615,19 @@
         ]
       }
     },
-    "ecsservice":{
+    "EcsService":{
       "Value":{
-        "Ref":"service"
+        "Ref":"EcsService"
       }
     },
-    "ecscluster":{
+    "EcsCluster":{
       "Value":{
-        "Ref":"ECSCluster"
+        "Ref":"EcsCluster"
       }
     },
-    "taskdef":{
+    "PhpTaskDefinition":{
       "Value":{
-        "Ref":"PHPTaskDefinition"
+        "Ref":"PhpTaskDefinition"
       }
     }
   }
