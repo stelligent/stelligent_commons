@@ -6,10 +6,6 @@
       "Type":"AWS::EC2::KeyPair::KeyName",
       "Description":"Name of an existing EC2 KeyPair to enable SSH access to the ECS instances"
     },
-    "VPCID":{
-      "Type":"AWS::EC2::VPC::Id",
-      "Description":"A VPC ID"
-    },
     "ECSRepoName":{
       "Type":"String",
       "Description":"The name of the ECR Repo"
@@ -18,10 +14,6 @@
       "Type":"String",
       "Description":"The version of the image tag",
       "Default":"latest"
-    },
-    "SubnetID":{
-      "Type":"List<AWS::EC2::Subnet::Id>",
-      "Description":"List of an existing subnet IDs to use for the load balancer and auto scaling group"
     },
     "DesiredCapacity":{
       "Type":"Number",
@@ -114,11 +106,29 @@
     }
   },
   "Resources":{
+    "VPCStack":{
+      "Type":"AWS::CloudFormation::Stack",
+      "Properties":{
+        "TemplateURL":"https://s3.amazonaws.com/stelligent-training-public/public/codepipeline/ecs-vpc.json",
+        "TimeoutInMinutes":"60",
+        "Parameters":{
+          "KeyName":{
+            "Ref":"KeyName"
+          }
+        }
+      }
+    },
     "SourceSG":{
       "Type":"AWS::EC2::SecurityGroup",
+      "DependsOn":[
+        "VPCStack"
+      ],
       "Properties":{
         "VpcId":{
-          "Ref":"VPCID"
+          "Fn::GetAtt":[
+            "VPCStack",
+            "Outputs.VpcId"
+          ]
         },
         "GroupDescription":"Sample source security group",
         "SecurityGroupIngress":[
@@ -141,9 +151,15 @@
     },
     "TargetSG":{
       "Type":"AWS::EC2::SecurityGroup",
+      "DependsOn":[
+        "VPCStack"
+      ],
       "Properties":{
         "VpcId":{
-          "Ref":"VPCID"
+          "Fn::GetAtt":[
+            "VPCStack",
+            "Outputs.VpcId"
+          ]
         },
         "GroupDescription":"ALL Inbound TCP - Source Restricted to SourceSG",
         "SecurityGroupIngress":[
@@ -166,6 +182,9 @@
     },
     "OutboundRule":{
       "Type":"AWS::EC2::SecurityGroupEgress",
+      "DependsOn":[
+        "VPCStack"
+      ],
       "Properties":{
         "IpProtocol":"tcp",
         "FromPort":"0",
@@ -186,6 +205,9 @@
     },
     "InboundRule":{
       "Type":"AWS::EC2::SecurityGroupIngress",
+      "DependsOn":[
+        "VPCStack"
+      ],
       "Properties":{
         "IpProtocol":"tcp",
         "FromPort":"0",
@@ -205,10 +227,16 @@
       }
     },
     "EcsCluster":{
-      "Type":"AWS::ECS::Cluster"
+      "Type":"AWS::ECS::Cluster",
+      "DependsOn":[
+        "VPCStack"
+      ]
     },
     "PhpTaskDefinition":{
       "Type":"AWS::ECS::TaskDefinition",
+      "DependsOn":[
+        "VPCStack"
+      ],
       "Properties":{
         "ContainerDefinitions":[
           {
@@ -251,10 +279,36 @@
     },
     "EcsElb":{
       "Type":"AWS::ElasticLoadBalancing::LoadBalancer",
+      "DependsOn":[
+        "VPCStack"
+      ],
       "Properties":{
-        "Subnets":{
-          "Ref":"SubnetID"
-        },
+        "Subnets":[
+          {
+            "Fn::GetAtt":[
+              "VPCStack",
+              "Outputs.PublicSubnet1"
+            ]
+          },
+          {
+            "Fn::GetAtt":[
+              "VPCStack",
+              "Outputs.PublicSubnet2"
+            ]
+          },
+          {
+            "Fn::GetAtt":[
+              "VPCStack",
+              "Outputs.PublicSubnet3"
+            ]
+          },
+          {
+            "Fn::GetAtt":[
+              "VPCStack",
+              "Outputs.PublicSubnet4"
+            ]
+          }
+        ],
         "Listeners":[
           {
             "LoadBalancerPort":"80",
@@ -281,10 +335,36 @@
     },
     "ECSAutoScalingGroup":{
       "Type":"AWS::AutoScaling::AutoScalingGroup",
+      "DependsOn":[
+        "VPCStack"
+      ],
       "Properties":{
-        "VPCZoneIdentifier":{
-          "Ref":"SubnetID"
-        },
+        "VPCZoneIdentifier":[
+          {
+            "Fn::GetAtt":[
+              "VPCStack",
+              "Outputs.PublicSubnet1"
+            ]
+          },
+          {
+            "Fn::GetAtt":[
+              "VPCStack",
+              "Outputs.PublicSubnet2"
+            ]
+          },
+          {
+            "Fn::GetAtt":[
+              "VPCStack",
+              "Outputs.PublicSubnet3"
+            ]
+          },
+          {
+            "Fn::GetAtt":[
+              "VPCStack",
+              "Outputs.PublicSubnet4"
+            ]
+          }
+        ],
         "LaunchConfigurationName":{
           "Ref":"ContainerInstances"
         },
@@ -312,6 +392,9 @@
     },
     "ContainerInstances":{
       "Type":"AWS::AutoScaling::LaunchConfiguration",
+      "DependsOn":[
+        "VPCStack"
+      ],
       "Metadata":{
         "AWS::CloudFormation::Init":{
           "config":{
@@ -461,6 +544,7 @@
     "EcsService":{
       "Type":"AWS::ECS::Service",
       "DependsOn":[
+        "VPCStack",
         "ECSAutoScalingGroup"
       ],
       "Properties":{
@@ -528,6 +612,9 @@
     },
     "EC2Role":{
       "Type":"AWS::IAM::Role",
+      "DependsOn":[
+        "VPCStack"
+      ],
       "Properties":{
         "AssumeRolePolicyDocument":{
           "Statement":[
@@ -571,6 +658,9 @@
     },
     "EC2InstanceProfile":{
       "Type":"AWS::IAM::InstanceProfile",
+      "DependsOn":[
+        "VPCStack"
+      ],
       "Properties":{
         "Path":"/",
         "Roles":[
