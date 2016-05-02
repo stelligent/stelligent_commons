@@ -2445,7 +2445,8 @@
             "/"
           ]
         ]
-      }
+      },
+      "Description":"URL to the working application running on ECS"
     },
     "VpcId":{
       "Value":{
