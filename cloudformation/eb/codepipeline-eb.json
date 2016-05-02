@@ -2,14 +2,6 @@
   "Description":"Integrate CodeCommit with CodePipeline to orchestrate a CodeDeploy deployment. **WARNING** This template creates one or more Amazon EC2 instances. You will be billed for the AWS resources used if you create a stack from this template.",
   "AWSTemplateFormatVersion":"2010-09-09",
   "Parameters":{
-    "ApplicationName":{
-      "Type":"String",
-      "Description":"Elastic Beanstalk Application Name"
-    },
-    "EnvironmentName":{
-      "Type":"String",
-      "Description":"Elastic Beanstalk Environment Name"
-    },
     "RepositoryName":{
       "Description":"The name of your CodeCommit repo",
       "Type":"String",
@@ -48,6 +40,77 @@
     }
   },
   "Resources":{
+    "sampleApplication":{
+      "Type":"AWS::ElasticBeanstalk::Application",
+      "Properties":{
+        "Description":"AWS Elastic Beanstalk Sample Application"
+      }
+    },
+    "sampleApplicationVersion":{
+      "Type":"AWS::ElasticBeanstalk::ApplicationVersion",
+      "Properties":{
+        "ApplicationName":{
+          "Ref":"sampleApplication"
+        },
+        "Description":"AWS ElasticBeanstalk Sample Application Version",
+        "SourceBundle":{
+          "S3Bucket":{
+            "Fn::Join":[
+              "-",
+              [
+                "elasticbeanstalk-samples",
+                {
+                  "Ref":"AWS::Region"
+                }
+              ]
+            ]
+          },
+          "S3Key":"nodejs-sample.zip"
+        }
+      }
+    },
+    "sampleConfigurationTemplate":{
+      "Type":"AWS::ElasticBeanstalk::ConfigurationTemplate",
+      "Properties":{
+        "ApplicationName":{
+          "Ref":"sampleApplication"
+        },
+        "Description":"AWS ElasticBeanstalk Sample Configuration Template",
+        "OptionSettings":[
+          {
+            "Namespace":"aws:autoscaling:asg",
+            "OptionName":"MinSize",
+            "Value":"2"
+          },
+          {
+            "Namespace":"aws:autoscaling:asg",
+            "OptionName":"MaxSize",
+            "Value":"6"
+          },
+          {
+            "Namespace":"aws:elasticbeanstalk:environment",
+            "OptionName":"EnvironmentType",
+            "Value":"LoadBalanced"
+          }
+        ],
+        "SolutionStackName":"64bit Amazon Linux 2015.09 v2.0.5 running Node.js"
+      }
+    },
+    "sampleEnvironment":{
+      "Type":"AWS::ElasticBeanstalk::Environment",
+      "Properties":{
+        "ApplicationName":{
+          "Ref":"sampleApplication"
+        },
+        "Description":"AWS ElasticBeanstalk Sample Node Environment",
+        "TemplateName":{
+          "Ref":"sampleConfigurationTemplate"
+        },
+        "VersionLabel":{
+          "Ref":"sampleApplicationVersion"
+        }
+      }
+    },
     "CodePipelineRole":{
       "Type":"AWS::IAM::Role",
       "Properties":{
@@ -148,6 +211,10 @@
     },
     "CodePipelineStack":{
       "Type":"AWS::CodePipeline::Pipeline",
+      "DependsOn":[
+        "sampleApplication",
+        "sampleEnvironment"
+      ],
       "Properties":{
         "RoleArn":{
           "Fn::Join":[
@@ -205,7 +272,7 @@
                     "Name":"MyApp"
                   }
                 ],
-                "Name":"pmd-samp-O8KOHSPX88VM",
+                "Name":"EbApp",
                 "ActionTypeId":{
                   "Category":"Deploy",
                   "Owner":"AWS",
@@ -217,10 +284,10 @@
                 ],
                 "Configuration":{
                   "ApplicationName":{
-                    "Ref":"ApplicationName"
+                    "Ref":"sampleApplication"
                   },
                   "EnvironmentName":{
-                    "Ref":"EnvironmentName"
+                    "Ref":"sampleEnvironment"
                   }
                 },
                 "RunOrder":1
@@ -250,6 +317,26 @@
     }
   },
   "Outputs":{
+    "sampleApplication":{
+      "Value":{
+        "Ref":"sampleApplication"
+      }
+    },
+    "sampleApplicationVersion":{
+      "Value":{
+        "Ref":"sampleApplicationVersion"
+      }
+    },
+    "sampleConfigurationTemplate":{
+      "Value":{
+        "Ref":"sampleConfigurationTemplate"
+      }
+    },
+    "sampleEnvironment":{
+      "Value":{
+        "Ref":"sampleEnvironment"
+      }
+    },
     "CodePipelineRole":{
       "Value":{
         "Ref":"CodePipelineRole"
