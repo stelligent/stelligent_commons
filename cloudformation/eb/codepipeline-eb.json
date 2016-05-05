@@ -335,6 +335,35 @@
       },
       "Description":"URL for the working Node application"
     },
+    "nodeApplication":{
+      "Value":{
+        "Ref":"nodeApplication"
+      }
+    },
+    "nodeApplicationVersion":{
+      "Value":{
+        "Ref":"nodeApplicationVersion"
+      },
+      "Description":"The Elastic Beanstalk application"
+    },
+    "nodeConfigurationTemplate":{
+      "Value":{
+        "Ref":"nodeConfigurationTemplate"
+      },
+      "Description":"The Elastic Beanstalk configuration"
+    },
+    "nodeEnvironment":{
+      "Value":{
+        "Ref":"nodeEnvironment"
+      },
+      "Description":"The Elastic Beanstalk environment on which the application runs"
+    },
+    "CodePipelineRole":{
+      "Value":{
+        "Ref":"CodePipelineRole"
+      },
+      "Description":"The IAM role associated with CodePipeline pipeline"
+    },
     "CodePipelineUrl":{
       "Value":{
         "Fn::Join":[
@@ -353,35 +382,5 @@
       },
       "Description":"Pipeline Url"
     }
-  },
-  "nodeApplication":{
-    "Value":{
-      "Ref":"nodeApplication"
-    },
-    "Description":"The Elastic Beanstalk application"
-  },
-  "nodeApplicationVersion":{
-    "Value":{
-      "Ref":"nodeApplicationVersion"
-    },
-    "Description":"The Elastic Beanstalk application version"
-  },
-  "nodeConfigurationTemplate":{
-    "Value":{
-      "Ref":"nodeConfigurationTemplate"
-    },
-    "Description":"The Elastic Beanstalk configuration"
-  },
-  "nodeEnvironment":{
-    "Value":{
-      "Ref":"nodeEnvironment"
-    },
-    "Description":"The Elastic Beanstalk environment on which the application runs"
-  },
-  "CodePipelineRole":{
-    "Value":{
-      "Ref":"CodePipelineRole"
-    },
-    "Description":"The IAM role associated with CodePipeline pipeline"
   }
 }
