@@ -1,9 +1,9 @@
 {
-  "Description":"Integrate CodeCommit with CodePipeline to orchestrate a CodeDeploy deployment. **WARNING** This template creates one or more Amazon EC2 instances. You will be billed for the AWS resources used if you create a stack from this template.",
+  "Description":"Deploy an Elastic Beanstalk app stored in CodeCommit via CodePipeline. **WARNING** This template creates one or more Amazon EC2 instances and a CodePipeline pipeline. You will be billed for the AWS resources used if you create a stack from this template.",
   "AWSTemplateFormatVersion":"2010-09-09",
   "Parameters":{
     "RepositoryName":{
-      "Description":"The name of your CodeCommit repo",
+      "Description":"The name of your CodeCommit repo. Go to https://console.aws.amazon.com/codecommit.",
       "Type":"String",
       "AllowedPattern":"[\\x20-\\x7E]*",
       "ConstraintDescription":"Can contain only ASCII characters."
@@ -40,17 +40,17 @@
     }
   },
   "Resources":{
-    "sampleApplication":{
+    "nodeApplication":{
       "Type":"AWS::ElasticBeanstalk::Application",
       "Properties":{
         "Description":"AWS Elastic Beanstalk Sample Application"
       }
     },
-    "sampleApplicationVersion":{
+    "nodeApplicationVersion":{
       "Type":"AWS::ElasticBeanstalk::ApplicationVersion",
       "Properties":{
         "ApplicationName":{
-          "Ref":"sampleApplication"
+          "Ref":"nodeApplication"
         },
         "Description":"AWS ElasticBeanstalk Sample Application Version",
         "SourceBundle":{
@@ -69,11 +69,11 @@
         }
       }
     },
-    "sampleConfigurationTemplate":{
+    "nodeConfigurationTemplate":{
       "Type":"AWS::ElasticBeanstalk::ConfigurationTemplate",
       "Properties":{
         "ApplicationName":{
-          "Ref":"sampleApplication"
+          "Ref":"nodeApplication"
         },
         "Description":"AWS ElasticBeanstalk Sample Configuration Template",
         "OptionSettings":[
@@ -96,18 +96,18 @@
         "SolutionStackName":"64bit Amazon Linux 2015.09 v2.0.5 running Node.js"
       }
     },
-    "sampleEnvironment":{
+    "nodeEnvironment":{
       "Type":"AWS::ElasticBeanstalk::Environment",
       "Properties":{
         "ApplicationName":{
-          "Ref":"sampleApplication"
+          "Ref":"nodeApplication"
         },
         "Description":"AWS ElasticBeanstalk Sample Node Environment",
         "TemplateName":{
-          "Ref":"sampleConfigurationTemplate"
+          "Ref":"nodeConfigurationTemplate"
         },
         "VersionLabel":{
-          "Ref":"sampleApplicationVersion"
+          "Ref":"nodeApplicationVersion"
         }
       }
     },
@@ -212,8 +212,8 @@
     "CodePipelineStack":{
       "Type":"AWS::CodePipeline::Pipeline",
       "DependsOn":[
-        "sampleApplication",
-        "sampleEnvironment"
+        "nodeApplication",
+        "nodeEnvironment"
       ],
       "Properties":{
         "RoleArn":{
@@ -284,10 +284,10 @@
                 ],
                 "Configuration":{
                   "ApplicationName":{
-                    "Ref":"sampleApplication"
+                    "Ref":"nodeApplication"
                   },
                   "EnvironmentName":{
-                    "Ref":"sampleEnvironment"
+                    "Ref":"nodeEnvironment"
                   }
                 },
                 "RunOrder":1
@@ -317,32 +317,25 @@
     }
   },
   "Outputs":{
-    "sampleApplication":{
+    "URL":{
       "Value":{
-        "Ref":"sampleApplication"
-      }
+        "Fn::Join":[
+          "",
+          [
+            "http://",
+            {
+              "Fn::GetAtt":[
+                "nodeEnvironment",
+                "EndpointURL"
+              ]
+            },
+            "/"
+          ]
+        ]
+      },
+      "Description":"URL for the working Node application"
     },
-    "sampleApplicationVersion":{
-      "Value":{
-        "Ref":"sampleApplicationVersion"
-      }
-    },
-    "sampleConfigurationTemplate":{
-      "Value":{
-        "Ref":"sampleConfigurationTemplate"
-      }
-    },
-    "sampleEnvironment":{
-      "Value":{
-        "Ref":"sampleEnvironment"
-      }
-    },
-    "CodePipelineRole":{
-      "Value":{
-        "Ref":"CodePipelineRole"
-      }
-    },
-    "PipelineUrl":{
+    "CodePipelineUrl":{
       "Value":{
         "Fn::Join":[
           "",
@@ -360,5 +353,35 @@
       },
       "Description":"Pipeline Url"
     }
+  },
+  "nodeApplication":{
+    "Value":{
+      "Ref":"nodeApplication"
+    },
+    "Description":"The Elastic Beanstalk application"
+  },
+  "nodeApplicationVersion":{
+    "Value":{
+      "Ref":"nodeApplicationVersion"
+    },
+    "Description":"The Elastic Beanstalk application version"
+  },
+  "nodeConfigurationTemplate":{
+    "Value":{
+      "Ref":"nodeConfigurationTemplate"
+    },
+    "Description":"The Elastic Beanstalk configuration"
+  },
+  "nodeEnvironment":{
+    "Value":{
+      "Ref":"nodeEnvironment"
+    },
+    "Description":"The Elastic Beanstalk environment on which the application runs"
+  },
+  "CodePipelineRole":{
+    "Value":{
+      "Ref":"CodePipelineRole"
+    },
+    "Description":"The IAM role associated with CodePipeline pipeline"
   }
 }
