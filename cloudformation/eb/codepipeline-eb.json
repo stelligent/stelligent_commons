@@ -21,7 +21,7 @@
       "ParameterGroups":[
         {
           "Label":{
-            "default":"Dynamic Configuration"
+            "default":"CodeCommit Repository"
           },
           "Parameters":[
             "RepositoryName",
@@ -98,6 +98,11 @@
     },
     "nodeEnvironment":{
       "Type":"AWS::ElasticBeanstalk::Environment",
+      "DependsOn":[
+        "nodeApplication",
+        "nodeConfigurationTemplate",
+        "nodeApplicationVersion"
+      ],
       "Properties":{
         "ApplicationName":{
           "Ref":"nodeApplication"
@@ -317,7 +322,7 @@
     }
   },
   "Outputs":{
-    "URL":{
+    "AppURL":{
       "Value":{
         "Fn::Join":[
           "",
@@ -334,6 +339,24 @@
         ]
       },
       "Description":"URL for the working Node application"
+    },
+    "CodePipelineURL":{
+      "Value":{
+        "Fn::Join":[
+          "",
+          [
+            "https://console.aws.amazon.com/codepipeline/home?region=",
+            {
+              "Ref":"AWS::Region"
+            },
+            "#/view/",
+            {
+              "Ref":"CodePipelineStack"
+            }
+          ]
+        ]
+      },
+      "Description":"Pipeline URL"
     },
     "nodeApplication":{
       "Value":{
@@ -363,24 +386,7 @@
         "Ref":"CodePipelineRole"
       },
       "Description":"The IAM role associated with CodePipeline pipeline"
-    },
-    "CodePipelineUrl":{
-      "Value":{
-        "Fn::Join":[
-          "",
-          [
-            "https://console.aws.amazon.com/codepipeline/home?region=",
-            {
-              "Ref":"AWS::Region"
-            },
-            "#/view/",
-            {
-              "Ref":"CodePipelineStack"
-            }
-          ]
-        ]
-      },
-      "Description":"Pipeline Url"
     }
+  
   }
 }
