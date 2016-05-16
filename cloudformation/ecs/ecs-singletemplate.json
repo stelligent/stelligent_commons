@@ -6,6 +6,25 @@
       "Type":"AWS::EC2::KeyPair::KeyName",
       "Description":"Name of an existing EC2 KeyPair to enable SSH access to the ECS instances"
     },
+    "RepositoryName":{
+      "Description":"The name of the CodeCommit repo",
+      "Type":"String",
+      "Default":"codecommit-demo",
+      "AllowedPattern":"[\\x20-\\x7E]*",
+      "ConstraintDescription":"Can contain only ASCII characters."
+    },
+    "RepositoryBranch":{
+      "Description":"The name of the branch for the CodeCommit repo",
+      "Type":"String",
+      "Default":"master",
+      "AllowedPattern":"[\\x20-\\x7E]*",
+      "ConstraintDescription":"Can contain only ASCII characters."
+    },
+    "S3Bucket":{
+      "Type":"String",
+      "Description":"S3 bucket to use for artifacts. Just bucket Name; not URL. IAM user should have access to the bucket.",
+      "Default":"stelligent-training-public"
+    },
     "ECSRepoName":{
       "Type":"String",
       "Description":"The name of the ECR Repo"
@@ -75,55 +94,6 @@
       "Default":"0.0.0.0/0",
       "AllowedPattern":"(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
       "ConstraintDescription":"must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-    "AppSourceType":{
-      "Type":"String",
-      "Default":"S3",
-      "AllowedValues":[
-        "S3",
-        "GitHub"
-      ],
-      "Description":"Source of your application's code"
-    },
-    "S3ArtifactObject":{
-      "Type":"String",
-      "Default":"samples/latest/aws-codedeploy-sample-tomcat.zip",
-      "Description":"Application artfiact name in S3."
-    },
-    "S3ArtifactBucket":{
-      "Type":"String",
-      "Default":"aws-codedeploy-samples-us-east-1",
-      "Description":"Name of the bucket that the application artifact will be based in."
-    },
-    "GitHubUser":{
-      "Type":"String",
-      "Default":"aGitHubUser",
-      "Description":"Your GitHub username"
-    },
-    "GitHubToken":{
-      "Type":"String",
-      "NoEcho":"true",
-      "Default":"oauthtoken1234",
-      "Description":"Go to https://github.com/settings/tokens to create/find a token for your account"
-    },
-    "GitHubRepoName":{
-      "Type":"String",
-      "Default":"aws-codedeploy-sample-tomcat",
-      "Description":"Name of the repository that your application is in. Not the Url."
-    },
-    "GitHubBranchName":{
-      "Type":"String",
-      "Default":"master",
-      "Description":"Name of the branch that you want to pull from. Not the Url."
-    },
-    "YourIP":{
-      "Description":"IP address to connect to SSH from. Check http://checkip.amazonaws.com/ to find yours.",
-      "Type":"String",
-      "Default":"999.999.999.999/32",
-      "MinLength":"10",
-      "MaxLength":"18",
-      "AllowedPattern":"(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
-      "ConstraintDescription":"must be a valid IP CIDR range of the form x.x.x.x/x."
     }
   },
   "Metadata":{
@@ -131,59 +101,12 @@
       "ParameterGroups":[
         {
           "Label":{
-            "default":"Application"
-          },
-          "Parameters":[
-            "AppSourceType"
-          ]
-        },
-        {
-          "Label":{
-            "default":"Application Source - S3"
-          },
-          "Parameters":[
-            "S3ArtifactBucket",
-            "S3ArtifactObject"
-          ]
-        },
-        {
-          "Label":{
-            "default":"Application Source - GitHub"
-          },
-          "Parameters":[
-            "GitHubUser",
-            "GitHubToken",
-            "GitHubRepoName",
-            "GitHubBranchName"
-          ]
-        },
-        {
-          "Label":{
             "default":"SSH & HTTP Configuration"
           },
           "Parameters":[
-            "KeyName",
-            "YourIP"
+            "KeyName"
           ]
         }
-      ]
-    }
-  },
-  "Conditions":{
-    "S3AsSource":{
-      "Fn::Equals":[
-        {
-          "Ref":"AppSourceType"
-        },
-        "S3"
-      ]
-    },
-    "GitHubAsSource":{
-      "Fn::Equals":[
-        {
-          "Ref":"AppSourceType"
-        },
-        "GitHub"
       ]
     }
   },
@@ -278,6 +201,171 @@
     }
   },
   "Resources":{
+    "LambdaCodePipelineExecutionPolicy":{
+      "DependsOn":[
+        "CodePipelineLambdaRole"
+      ],
+      "Type":"AWS::IAM::Policy",
+      "Properties":{
+        "PolicyName":"LambdaRolePolicy",
+        "Roles":[
+          {
+            "Ref":"CodePipelineLambdaRole"
+          }
+        ],
+        "PolicyDocument":{
+          "Version":"2012-10-17",
+          "Statement":[
+            {
+              "Effect":"Allow",
+              "Action":[
+                "logs:*"
+              ],
+              "Resource":[
+                "arn:aws:logs:*:*:*"
+              ]
+            },
+            {
+              "Effect":"Allow",
+              "Action":[
+                "codepipeline:PutJobSuccessResult",
+                "codepipeline:PutJobFailureResult"
+              ],
+              "Resource":[
+                "*"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "CodePipelineLambdaRole":{
+      "Type":"AWS::IAM::Role",
+      "Properties":{
+        "AssumeRolePolicyDocument":{
+          "Version":"2012-10-17",
+          "Statement":[
+            {
+              "Effect":"Allow",
+              "Principal":{
+                "Service":[
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action":[
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Path":"/",
+        "Policies":[
+          {
+            "PolicyName":"codepipeline-service",
+            "PolicyDocument":{
+              "Statement":[
+                {
+                  "Action":[
+                    "cloudformation:*",
+                    "codepipeline:*",
+                    "codecommit:GetBranch",
+                    "codecommit:GetCommit",
+                    "codecommit:UploadArchive",
+                    "codecommit:GetUploadArchiveStatus",
+                    "codecommit:CancelUploadArchive"
+                  ],
+                  "Resource":"*",
+                  "Effect":"Allow"
+                },
+                {
+                  "Action":[
+                    "s3:GetObject",
+                    "s3:GetObjectVersion",
+                    "s3:GetBucketVersioning"
+                  ],
+                  "Resource":"*",
+                  "Effect":"Allow"
+                },
+                {
+                  "Action":[
+                    "s3:PutObject"
+                  ],
+                  "Resource":[
+                    "arn:aws:s3:::codepipeline*",
+                    "arn:aws:s3:::elasticbeanstalk*"
+                  ],
+                  "Effect":"Allow"
+                },
+                {
+                  "Action":[
+                    "codedeploy:CreateDeployment",
+                    "codedeploy:GetApplicationRevision",
+                    "codedeploy:GetDeployment",
+                    "codedeploy:GetDeploymentConfig",
+                    "codedeploy:RegisterApplicationRevision"
+                  ],
+                  "Resource":"*",
+                  "Effect":"Allow"
+                },
+                {
+                  "Action":[
+                    "elasticbeanstalk:*",
+                    "ec2:*",
+                    "elasticloadbalancing:*",
+                    "autoscaling:*",
+                    "cloudwatch:*",
+                    "s3:*",
+                    "sns:*",
+                    "cloudformation:*",
+                    "rds:*",
+                    "sqs:*",
+                    "ecs:*",
+                    "iam:PassRole"
+                  ],
+                  "Resource":"*",
+                  "Effect":"Allow"
+                },
+                {
+                  "Action":[
+                    "lambda:InvokeFunction",
+                    "lambda:ListFunctions"
+                  ],
+                  "Resource":"*",
+                  "Effect":"Allow"
+                }
+              ],
+              "Version":"2012-10-17"
+            }
+          }
+        ]
+      }
+    },
+    "CodePipelineLambdaEcsFunction":{
+      "Type":"AWS::Lambda::Function",
+      "DependsOn":[
+        "CodePipelineLambdaRole",
+        "LambdaCodePipelineExecutionPolicy"
+      ],
+      "Properties":{
+        "Code":{
+          "S3Bucket":{
+            "Ref":"S3Bucket"
+          },
+          "S3Key":"public/lambda/update-ecs.zip"
+        },
+        "Role":{
+          "Fn::GetAtt":[
+            "CodePipelineLambdaRole",
+            "Arn"
+          ]
+        },
+        "Description":"Always return success",
+        "Timeout":20,
+        "Handler":"update-ecs.handler",
+        "Runtime":"nodejs",
+        "MemorySize":128
+      }
+    },
     "MyVPC":{
       "Type":"AWS::EC2::VPC",
       "Properties":{
@@ -565,1097 +653,124 @@
         }
       }
     },
-    "S3Bucket":{
-      "DeletionPolicy":"Retain",
-      "Type":"AWS::S3::Bucket",
-      "Properties":{
-        "BucketName":{
-          "Fn::Join":[
-            "",
-            [
-              "demo-",
-              {
-                "Ref":"AWS::Region"
-              },
-              "-",
-              {
-                "Ref":"AWS::AccountId"
-              },
-              "-",
-              {
-                "Ref":"AWS::StackName"
-              }
-            ]
-          ]
-        },
-        "VersioningConfiguration":{
-          "Status":"Enabled"
-        },
-        "Tags":[
-          {
-            "Key":"Name",
-            "Value":{
-              "Fn::Join":[
-                "",
-                [
-                  {
-                    "Ref":"AWS::StackName"
-                  },
-                  "-S3Bucket"
-                ]
-              ]
-            }
-          }
-        ]
-      }
-    },
-    "WebAppRole":{
+    "CodePipelineRole":{
       "Type":"AWS::IAM::Role",
       "Properties":{
         "AssumeRolePolicyDocument":{
           "Statement":[
             {
-              "Sid":"",
-              "Effect":"Allow",
-              "Principal":{
-                "Service":"ec2.amazonaws.com"
-              },
-              "Action":"sts:AssumeRole"
-            }
-          ]
-        },
-        "ManagedPolicyArns":[
-          "arn:aws:iam::aws:policy/AWSCodeDeployReadOnlyAccess",
-          "arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess"
-        ],
-        "Path":"/"
-      }
-    },
-    "WebAppRolePolicies":{
-      "Type":"AWS::IAM::Policy",
-      "Properties":{
-        "PolicyName":"BackendRole",
-        "PolicyDocument":{
-          "Statement":[
-            {
-              "Effect":"Allow",
-              "Action":"cloudformation:DescribeStackResources",
-              "Resource":[
-                {
-                  "Fn::Join":[
-                    "",
-                    [
-                      "arn:aws:cloudformation:",
-                      {
-                        "Ref":"AWS::Region"
-                      },
-                      ":",
-                      {
-                        "Ref":"AWS::AccountId"
-                      },
-                      ":stack/",
-                      {
-                        "Ref":"AWS::StackName"
-                      },
-                      "/*"
-                    ]
-                  ]
-                }
-              ]
-            },
-            {
-              "Effect":"Allow",
-              "Action":[
-                "autoscaling:Describe*",
-                "autoscaling:EnterStandby",
-                "autoscaling:ExitStandby",
-                "autoscaling:UpdateAutoScalingGroup"
-              ],
-              "Resource":"*"
-            },
-            {
-              "Effect":"Allow",
-              "Action":[
-                "ec2:DescribeInstances",
-                "ec2:DescribeInstanceStatus"
-              ],
-              "Resource":"*"
-            },
-            {
-              "Effect":"Allow",
-              "Action":[
-                "elasticloadbalancing:Describe*",
-                "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
-                "elasticloadbalancing:RegisterInstancesWithLoadBalancer"
-              ],
-              "Resource":"*"
-            },
-            {
-              "Effect":"Allow",
-              "Action":[
-                "s3:Get*",
-                "s3:List*"
-              ],
-              "Resource":[
-                {
-                  "Fn::Join":[
-                    "",
-                    [
-                      "arn:aws:s3:::demo-",
-                      {
-                        "Ref":"AWS::Region"
-                      },
-                      "-",
-                      {
-                        "Ref":"AWS::AccountId"
-                      },
-                      "-",
-                      {
-                        "Ref":"AWS::StackName"
-                      }
-                    ]
-                  ]
-                },
-                {
-                  "Fn::Join":[
-                    "",
-                    [
-                      "arn:aws:s3:::demo-",
-                      {
-                        "Ref":"AWS::Region"
-                      },
-                      "-",
-                      {
-                        "Ref":"AWS::AccountId"
-                      },
-                      "-",
-                      {
-                        "Ref":"AWS::StackName"
-                      },
-                      "/*"
-                    ]
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        "Roles":[
-          {
-            "Ref":"WebAppRole"
-          }
-        ]
-      }
-    },
-    "WebAppInstanceProfile":{
-      "Type":"AWS::IAM::InstanceProfile",
-      "Properties":{
-        "Path":"/",
-        "Roles":[
-          {
-            "Ref":"WebAppRole"
-          }
-        ]
-      }
-    },
-    "WebAppSG":{
-      "Type":"AWS::EC2::SecurityGroup",
-      "Properties":{
-        "GroupDescription":"Enable HTTP access on port 80",
-        "VpcId":{
-          "Ref":"MyVPC"
-        },
-        "SecurityGroupIngress":[
-          {
-            "IpProtocol":"tcp",
-            "FromPort":"22",
-            "ToPort":"22",
-            "CidrIp":{
-              "Fn::Join":[
-                "",
-                [
-                  {
-                    "Fn::FindInMap":[
-                      "VPCIpSpace",
-                      {
-                        "Ref":"AWS::Region"
-                      },
-                      "RANGE"
-                    ]
-                  },
-                  ".",
-                  "0.0/16"
-                ]
-              ]
-            }
-          },
-          {
-            "IpProtocol":"tcp",
-            "FromPort":"80",
-            "ToPort":"80",
-            "CidrIp":"0.0.0.0/0"
-          }
-        ],
-        "SecurityGroupEgress":[
-          {
-            "IpProtocol":"tcp",
-            "FromPort":"80",
-            "ToPort":"80",
-            "CidrIp":"0.0.0.0/0"
-          },
-          {
-            "IpProtocol":"tcp",
-            "FromPort":"443",
-            "ToPort":"443",
-            "CidrIp":"0.0.0.0/0"
-          },
-          {
-            "IpProtocol":"udp",
-            "FromPort":"123",
-            "ToPort":"123",
-            "CidrIp":"0.0.0.0/0"
-          },
-          {
-            "IpProtocol":"udp",
-            "FromPort":"9418",
-            "ToPort":"9418",
-            "CidrIp":"0.0.0.0/0"
-          },
-          {
-            "IpProtocol":"icmp",
-            "FromPort":"-1",
-            "ToPort":"-1",
-            "CidrIp":"0.0.0.0/0"
-          }
-        ],
-        "Tags":[
-          {
-            "Key":"Name",
-            "Value":"WebAppSG"
-          }
-        ]
-      }
-    },
-    "DevWebApp01":{
-      "Type":"AWS::EC2::Instance",
-      "Properties":{
-        "ImageId":{
-          "Fn::FindInMap":[
-            "AWSRegionVirt2AMI",
-            {
-              "Ref":"AWS::Region"
-            },
-            {
-              "Fn::FindInMap":[
-                "AWSInstanceType2Virt",
-                {
-                  "Fn::FindInMap":[
-                    "instancesTypes",
-                    "Demo",
-                    "INST"
-                  ]
-                },
-                "Virt"
-              ]
-            }
-          ]
-        },
-        "InstanceType":{
-          "Fn::FindInMap":[
-            "instancesTypes",
-            "Demo",
-            "INST"
-          ]
-        },
-        "KeyName":{
-          "Ref":"KeyName"
-        },
-        "IamInstanceProfile":{
-          "Ref":"WebAppInstanceProfile"
-        },
-        "EbsOptimized":{
-          "Fn::FindInMap":[
-            "AWSInstanceType2EBSOpt",
-            {
-              "Fn::FindInMap":[
-                "instancesTypes",
-                "Demo",
-                "INST"
-              ]
-            },
-            "EBSOpt"
-          ]
-        },
-        "NetworkInterfaces":[
-          {
-            "SubnetId":{
-              "Ref":"publicSubnet01"
-            },
-            "GroupSet":[
-              {
-                "Ref":"WebAppSG"
-              }
-            ],
-            "AssociatePublicIpAddress":"true",
-            "DeviceIndex":"0"
-          }
-        ],
-        "UserData":{
-          "Fn::Base64":{
-            "Fn::Join":[
-              "",
-              [
-                "#!/bin/bash -ex\n",
-                "yum install -y aws-cli\n",
-                "cd /home/ec2-user/\n",
-                "wget https://aws-codedeploy-",
-                {
-                  "Ref":"AWS::Region"
-                },
-                ".s3.amazonaws.com/latest/codedeploy-agent.noarch.rpm\n",
-                "yum -y install codedeploy-agent.noarch.rpm\n",
-                "service codedeploy-agent start\n",
-                "\n"
-              ]
-            ]
-          }
-        },
-        "Tags":[
-          {
-            "Key":"Environment",
-            "Value":{
-              "Fn::Join":[
-                "",
-                [
-                  {
-                    "Ref":"AWS::StackName"
-                  },
-                  "-DevWebApp"
-                ]
-              ]
-            }
-          },
-          {
-            "Key":"Name",
-            "Value":"DevWebApp01"
-          }
-        ]
-      }
-    },
-    "ProdWebApp01":{
-      "Type":"AWS::EC2::Instance",
-      "Properties":{
-        "ImageId":{
-          "Fn::FindInMap":[
-            "AWSRegionVirt2AMI",
-            {
-              "Ref":"AWS::Region"
-            },
-            {
-              "Fn::FindInMap":[
-                "AWSInstanceType2Virt",
-                {
-                  "Fn::FindInMap":[
-                    "instancesTypes",
-                    "Demo",
-                    "INST"
-                  ]
-                },
-                "Virt"
-              ]
-            }
-          ]
-        },
-        "InstanceType":{
-          "Fn::FindInMap":[
-            "instancesTypes",
-            "Demo",
-            "INST"
-          ]
-        },
-        "KeyName":{
-          "Ref":"KeyName"
-        },
-        "IamInstanceProfile":{
-          "Ref":"WebAppInstanceProfile"
-        },
-        "EbsOptimized":{
-          "Fn::FindInMap":[
-            "AWSInstanceType2EBSOpt",
-            {
-              "Fn::FindInMap":[
-                "instancesTypes",
-                "Demo",
-                "INST"
-              ]
-            },
-            "EBSOpt"
-          ]
-        },
-        "NetworkInterfaces":[
-          {
-            "SubnetId":{
-              "Ref":"publicSubnet01"
-            },
-            "GroupSet":[
-              {
-                "Ref":"WebAppSG"
-              }
-            ],
-            "AssociatePublicIpAddress":"true",
-            "DeviceIndex":"0"
-          }
-        ],
-        "UserData":{
-          "Fn::Base64":{
-            "Fn::Join":[
-              "",
-              [
-                "#!/bin/bash -ex\n",
-                "yum install -y aws-cli\n",
-                "cd /home/ec2-user/\n",
-                "wget https://aws-codedeploy-",
-                {
-                  "Ref":"AWS::Region"
-                },
-                ".s3.amazonaws.com/latest/codedeploy-agent.noarch.rpm\n",
-                "yum -y install codedeploy-agent.noarch.rpm\n",
-                "service codedeploy-agent start\n",
-                "\n"
-              ]
-            ]
-          }
-        },
-        "Tags":[
-          {
-            "Key":"Environment",
-            "Value":{
-              "Fn::Join":[
-                "",
-                [
-                  {
-                    "Ref":"AWS::StackName"
-                  },
-                  "-ProdWebApp"
-                ]
-              ]
-            }
-          },
-          {
-            "Key":"Name",
-            "Value":"ProdWebApp01"
-          }
-        ]
-      }
-    },
-    "JenkinsRole":{
-      "Type":"AWS::IAM::Role",
-      "Properties":{
-        "AssumeRolePolicyDocument":{
-          "Statement":[
-            {
-              "Sid":"",
-              "Effect":"Allow",
-              "Principal":{
-                "Service":"ec2.amazonaws.com"
-              },
-              "Action":"sts:AssumeRole"
-            }
-          ]
-        },
-        "Path":"/"
-      }
-    },
-    "JenkinsRolePolicies":{
-      "Type":"AWS::IAM::Policy",
-      "Properties":{
-        "PolicyName":"JenkinsRole",
-        "PolicyDocument":{
-          "Statement":[
-            {
-              "Action":[
-                "codepipeline:AcknowledgeJob",
-                "codepipeline:GetJobDetails",
-                "codepipeline:PollForJobs",
-                "codepipeline:PutJobFailureResult",
-                "codepipeline:PutJobSuccessResult"
-              ],
-              "Effect":"Allow",
-              "Resource":"*"
-            }
-          ]
-        },
-        "Roles":[
-          {
-            "Ref":"JenkinsRole"
-          }
-        ]
-      }
-    },
-    "JenkinsInstanceProfile":{
-      "Type":"AWS::IAM::InstanceProfile",
-      "Properties":{
-        "Path":"/",
-        "Roles":[
-          {
-            "Ref":"JenkinsRole"
-          }
-        ]
-      }
-    },
-    "JenkinsSG":{
-      "Type":"AWS::EC2::SecurityGroup",
-      "Properties":{
-        "GroupDescription":"Enable HTTP access on port 80",
-        "VpcId":{
-          "Ref":"MyVPC"
-        },
-        "SecurityGroupIngress":[
-          {
-            "IpProtocol":"tcp",
-            "FromPort":"22",
-            "ToPort":"22",
-            "CidrIp":{
-              "Ref":"YourIP"
-            }
-          },
-          {
-            "IpProtocol":"tcp",
-            "FromPort":"80",
-            "ToPort":"80",
-            "CidrIp":{
-              "Ref":"YourIP"
-            }
-          }
-        ],
-        "SecurityGroupEgress":[
-          {
-            "IpProtocol":"tcp",
-            "FromPort":"80",
-            "ToPort":"80",
-            "CidrIp":"0.0.0.0/0"
-          },
-          {
-            "IpProtocol":"tcp",
-            "FromPort":"443",
-            "ToPort":"443",
-            "CidrIp":"0.0.0.0/0"
-          },
-          {
-            "IpProtocol":"udp",
-            "FromPort":"123",
-            "ToPort":"123",
-            "CidrIp":"0.0.0.0/0"
-          },
-          {
-            "IpProtocol":"udp",
-            "FromPort":"9418",
-            "ToPort":"9418",
-            "CidrIp":"0.0.0.0/0"
-          },
-          {
-            "IpProtocol":"icmp",
-            "FromPort":"-1",
-            "ToPort":"-1",
-            "CidrIp":"0.0.0.0/0"
-          }
-        ],
-        "Tags":[
-          {
-            "Key":"Name",
-            "Value":"JenkinsSG"
-          }
-        ]
-      }
-    },
-    "JenkinsServer":{
-      "Type":"AWS::EC2::Instance",
-      "Metadata":{
-        "AWS::CloudFormation::Init":{
-          "config":{
-            "packages":{
-              "yum":{
-                "java-1.7.0-openjdk":[
-
-                ],
-                "java-1.7.0-openjdk-devel":[
-
-                ]
-              }
-            },
-            "files":{
-              "/tmp/config.xml":{
-                "source":"https://s3.amazonaws.com/aws-codedeploy-samples-us-east-1/templates/latest/Jenkins_Helper_Scripts/config.xml",
-                "mode":"644"
-              },
-              "/tmp/hudson.tasks.Maven.xml":{
-                "source":"https://s3.amazonaws.com/aws-codedeploy-samples-us-east-1/templates/latest/Jenkins_Helper_Scripts/hudson.tasks.Maven.xml",
-                "mode":"644"
-              },
-              "/tmp/jenkins.mvn.GlobalMavenConfig.xml":{
-                "source":"https://s3.amazonaws.com/aws-codedeploy-samples-us-east-1/templates/latest/Jenkins_Helper_Scripts/jenkins.mvn.GlobalMavenConfig.xml",
-                "mode":"644"
-              }
-            }
-          }
-        }
-      },
-      "Properties":{
-        "KeyName":{
-          "Ref":"KeyName"
-        },
-        "ImageId":{
-          "Fn::FindInMap":[
-            "AWSRegionVirt2AMI",
-            {
-              "Ref":"AWS::Region"
-            },
-            {
-              "Fn::FindInMap":[
-                "AWSInstanceType2Virt",
-                "t2.large",
-                "Virt"
-              ]
-            }
-          ]
-        },
-        "NetworkInterfaces":[
-          {
-            "SubnetId":{
-              "Ref":"publicSubnet01"
-            },
-            "GroupSet":[
-              {
-                "Ref":"JenkinsSG"
-              }
-            ],
-            "AssociatePublicIpAddress":"true",
-            "DeviceIndex":"0"
-          }
-        ],
-        "EbsOptimized":{
-          "Fn::FindInMap":[
-            "AWSInstanceType2EBSOpt",
-            "t2.large",
-            "EBSOpt"
-          ]
-        },
-        "InstanceType":"t2.large",
-        "IamInstanceProfile":{
-          "Ref":"JenkinsInstanceProfile"
-        },
-        "UserData":{
-          "Fn::Base64":{
-            "Fn::Join":[
-              "",
-              [
-                "#!/bin/bash -ex\n",
-                "yum update -y aws-cfn-bootstrap\n",
-                "# Update the AWS CLI to the latest version\n",
-                "yum install -y aws-cli\n",
-                "function error_exit\n",
-                "{\n",
-                "  /opt/aws/bin/cfn-signal -e 1 -r \"$1\" '",
-                {
-                  "Ref":"JenkinsHostWaitHandle"
-                },
-                "'\n",
-                "  exit 1\n",
-                "}\n",
-                "/opt/aws/bin/cfn-init -v -s ",
-                {
-                  "Ref":"AWS::StackName"
-                },
-                " -r JenkinsServer --region ",
-                {
-                  "Ref":"AWS::Region"
-                },
-                "\n",
-                "# Install Maven\n",
-                "cd /tmp/\n",
-                "wget http://mirror.cogentco.com/pub/apache/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.tar.gz\n",
-                "tar xzvf apache-maven-3.3.3-bin.tar.gz -C /opt/\n",
-                "rm /tmp/apache-maven-3.3.3-bin.tar.gz\n",
-                "# Install Jenkins\n",
-                "wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo\n",
-                "rpm --import http://pkg.jenkins-ci.org/redhat/jenkins-ci.org.key\n",
-                "yum install -y jenkins-1.658-1.1\n",
-                "service jenkins start\n",
-                "chkconfig jenkins on\n",
-                "# Wait 30 seconds to allow Jenkins to startup\n",
-                "echo \"Waiting 30 seconds for Jenkins to start.....\"\n",
-                "sleep 30\n",
-                "# Install the required plugins\n",
-                "cd /var/lib/jenkins/plugins\n",
-                "curl -O -L https://updates.jenkins-ci.org/latest/aws-codepipeline.hpi\n",
-                "chown jenkins:jenkins *.hpi\n",
-                "mv /tmp/hudson.tasks.Maven.xml /var/lib/jenkins/\n",
-                "mv /tmp/jenkins.mvn.GlobalMavenConfig.xml /var/lib/jenkins/\n",
-                "chown jenkins:jenkins /var/lib/jenkins/*.xml\n",
-                "# Restarting Jenkins\n",
-                "service jenkins restart\n",
-                "echo \"Waiting 30 seconds for Jenkins to start.....\"\n",
-                "sleep 30\n",
-                "# configure our job\n",
-                "/bin/sed -i \"s/APPNAME/",
-                {
-                  "Ref":"AWS::StackName"
-                },
-                "/g\" /tmp/config.xml\n",
-                "/bin/sed -i \"s/REGION/",
-                {
-                  "Ref":"AWS::Region"
-                },
-                "/g\" /tmp/config.xml\n",
-                "/usr/bin/java -jar /var/cache/jenkins/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080 create-job ",
-                {
-                  "Ref":"AWS::StackName"
-                },
-                "< /tmp/config.xml\n",
-                "rm /tmp/config.xml\n",
-                "# Set up port forwarding\n",
-                "iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 8080\n",
-                "iptables-save > /etc/sysconfig/iptables\n",
-                "# If all went well, signal success\n",
-                "/opt/aws/bin/cfn-signal -e $? -r 'Instance configuration complete' '",
-                {
-                  "Ref":"JenkinsHostWaitHandle"
-                },
-                "'\n",
-                "\n"
-              ]
-            ]
-          }
-        },
-        "Tags":[
-          {
-            "Key":"Name",
-            "Value":"JenkinsServer"
-          }
-        ]
-      }
-    },
-    "JenkinsHostWaitHandle":{
-      "Type":"AWS::CloudFormation::WaitConditionHandle"
-    },
-    "JenkinsHostWaitCondition":{
-      "Type":"AWS::CloudFormation::WaitCondition",
-      "DependsOn":"JenkinsServer",
-      "Properties":{
-        "Handle":{
-          "Ref":"JenkinsHostWaitHandle"
-        },
-        "Timeout":"600"
-      }
-    },
-    "CodeDeployTrustRole":{
-      "Type":"AWS::IAM::Role",
-      "Properties":{
-        "AssumeRolePolicyDocument":{
-          "Statement":[
-            {
-              "Sid":"",
-              "Effect":"Allow",
-              "Principal":{
-                "Service":[
-                  "codedeploy.amazonaws.com"
-                ]
-              },
-              "Action":"sts:AssumeRole"
-            }
-          ]
-        },
-        "ManagedPolicyArns":[
-          "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
-        ],
-        "Path":"/"
-      }
-    },
-    "MyApp":{
-      "Type":"AWS::CodeDeploy::Application",
-      "Properties":{
-        "ApplicationName":{
-          "Ref":"AWS::StackName"
-        }
-      }
-    },
-    "DevDeploymentGroup":{
-      "DependsOn":"CodeDeployTrustRole",
-      "Type":"AWS::CodeDeploy::DeploymentGroup",
-      "Properties":{
-        "ApplicationName":{
-          "Ref":"MyApp"
-        },
-        "DeploymentGroupName":{
-          "Fn::Join":[
-            "",
-            [
-              {
-                "Ref":"AWS::StackName"
-              },
-              "-DevEnv"
-            ]
-          ]
-        },
-        "DeploymentConfigName":"CodeDeployDefault.OneAtATime",
-        "ServiceRoleArn":{
-          "Fn::GetAtt":[
-            "CodeDeployTrustRole",
-            "Arn"
-          ]
-        },
-        "Ec2TagFilters":[
-          {
-            "Key":"Environment",
-            "Value":{
-              "Fn::Join":[
-                "",
-                [
-                  {
-                    "Ref":"AWS::StackName"
-                  },
-                  "-DevWebApp"
-                ]
-              ]
-            },
-            "Type":"KEY_AND_VALUE"
-          }
-        ]
-      }
-    },
-    "ProdDeploymentGroup":{
-      "DependsOn":"CodeDeployTrustRole",
-      "Type":"AWS::CodeDeploy::DeploymentGroup",
-      "Properties":{
-        "ApplicationName":{
-          "Ref":"MyApp"
-        },
-        "DeploymentGroupName":{
-          "Fn::Join":[
-            "",
-            [
-              {
-                "Ref":"AWS::StackName"
-              },
-              "-ProdEnv"
-            ]
-          ]
-        },
-        "DeploymentConfigName":"CodeDeployDefault.OneAtATime",
-        "ServiceRoleArn":{
-          "Fn::GetAtt":[
-            "CodeDeployTrustRole",
-            "Arn"
-          ]
-        },
-        "Ec2TagFilters":[
-          {
-            "Key":"Environment",
-            "Value":{
-              "Fn::Join":[
-                "",
-                [
-                  {
-                    "Ref":"AWS::StackName"
-                  },
-                  "-ProdWebApp"
-                ]
-              ]
-            },
-            "Type":"KEY_AND_VALUE"
-          }
-        ]
-      }
-    },
-    "CodePipelineTrustRole":{
-      "Type":"AWS::IAM::Role",
-      "Properties":{
-        "AssumeRolePolicyDocument":{
-          "Statement":[
-            {
-              "Sid":"1",
               "Effect":"Allow",
               "Principal":{
                 "Service":[
                   "codepipeline.amazonaws.com"
                 ]
               },
-              "Action":"sts:AssumeRole"
+              "Action":[
+                "sts:AssumeRole"
+              ]
             }
           ]
         },
-        "Path":"/"
-      }
-    },
-    "CodePipelineRolePolicies":{
-      "Type":"AWS::IAM::Policy",
-      "Properties":{
-        "PolicyName":"CodePipelinePolicy",
-        "PolicyDocument":{
-          "Statement":[
-            {
-              "Action":[
-                "s3:*"
-              ],
-              "Resource":[
-                "*"
-              ],
-              "Effect":"Allow"
-            },
-            {
-              "Action":[
-                "s3:PutBucketPolicy",
-                "s3:PutObject"
-              ],
-              "Resource":[
+        "Path":"/",
+        "Policies":[
+          {
+            "PolicyName":"codepipeline-service",
+            "PolicyDocument":{
+              "Statement":[
                 {
-                  "Fn::Join":[
-                    "",
-                    [
-                      "arn:aws:s3:::demo-",
-                      {
-                        "Ref":"AWS::Region"
-                      },
-                      "-",
-                      {
-                        "Ref":"AWS::AccountId"
-                      },
-                      "-",
-                      {
-                        "Ref":"AWS::StackName"
-                      }
-                    ]
-                  ]
+                  "Action":[
+                    "cloudformation:*",
+                    "codecommit:GetBranch",
+                    "codecommit:GetCommit",
+                    "codecommit:UploadArchive",
+                    "codecommit:GetUploadArchiveStatus",
+                    "codecommit:CancelUploadArchive"
+                  ],
+                  "Resource":"*",
+                  "Effect":"Allow"
+                },
+                {
+                  "Action":[
+                    "s3:GetObject",
+                    "s3:GetObjectVersion",
+                    "s3:GetBucketVersioning"
+                  ],
+                  "Resource":"*",
+                  "Effect":"Allow"
+                },
+                {
+                  "Action":[
+                    "s3:PutObject"
+                  ],
+                  "Resource":[
+                    "arn:aws:s3:::codepipeline*",
+                    "arn:aws:s3:::elasticbeanstalk*"
+                  ],
+                  "Effect":"Allow"
+                },
+                {
+                  "Action":[
+                    "codedeploy:CreateDeployment",
+                    "codedeploy:GetApplicationRevision",
+                    "codedeploy:GetDeployment",
+                    "codedeploy:GetDeploymentConfig",
+                    "codedeploy:RegisterApplicationRevision"
+                  ],
+                  "Resource":"*",
+                  "Effect":"Allow"
+                },
+                {
+                  "Action":[
+                    "elasticbeanstalk:*",
+                    "ec2:*",
+                    "elasticloadbalancing:*",
+                    "autoscaling:*",
+                    "cloudwatch:*",
+                    "s3:*",
+                    "sns:*",
+                    "cloudformation:*",
+                    "rds:*",
+                    "sqs:*",
+                    "ecs:*",
+                    "iam:PassRole"
+                  ],
+                  "Resource":"*",
+                  "Effect":"Allow"
+                },
+                {
+                  "Action":[
+                    "lambda:InvokeFunction",
+                    "lambda:ListFunctions"
+                  ],
+                  "Resource":"*",
+                  "Effect":"Allow"
                 }
               ],
-              "Effect":"Allow"
-            },
-            {
-              "Action":[
-                "codecommit:GetBranch",
-                "codecommit:GetCommit",
-                "codecommit:UploadArchive",
-                "codecommit:GetUploadArchiveStatus",
-                "codecommit:CancelUploadArchive"
-              ],
-              "Resource":"*",
-              "Effect":"Allow"
-            },
-            {
-              "Action":[
-                "codepipeline:*",
-                "iam:ListRoles",
-                "iam:PassRole",
-                "codedeploy:CreateDeployment",
-                "codedeploy:GetApplicationRevision",
-                "codedeploy:GetDeployment",
-                "codedeploy:GetDeploymentConfig",
-                "codedeploy:RegisterApplicationRevision",
-                "elasticbeanstalk:DescribeApplications",
-                "elasticbeanstalk:DescribeEnvironments",
-                "lambda:GetFunctionConfiguration",
-                "lambda:ListFunctions"
-              ],
-              "Resource":"*",
-              "Effect":"Allow"
+              "Version":"2012-10-17"
             }
-          ]
-        },
-        "Roles":[
-          {
-            "Ref":"CodePipelineTrustRole"
           }
         ]
       }
     },
-    "CustomJenkinsActionType":{
-      "Type":"AWS::CodePipeline::CustomActionType",
-      "DependsOn":"JenkinsHostWaitCondition",
-      "Properties":{
-        "Category":"Build",
-        "Provider":{
-          "Fn::Join":[
-            "",
-            [
-              {
-                "Ref":"AWS::StackName"
-              },
-              "-Jenkins"
-            ]
-          ]
-        },
-        "Version":"1",
-        "ConfigurationProperties":[
-          {
-            "Key":"true",
-            "Name":"ProjectName",
-            "Queryable":"true",
-            "Required":"true",
-            "Secret":"false",
-            "Type":"String"
-          }
-        ],
-        "InputArtifactDetails":{
-          "MaximumCount":5,
-          "MinimumCount":0
-        },
-        "OutputArtifactDetails":{
-          "MaximumCount":5,
-          "MinimumCount":0
-        },
-        "Settings":{
-          "EntityUrlTemplate":{
-            "Fn::Join":[
-              "",
-              [
-                "http://",
-                {
-                  "Fn::GetAtt":[
-                    "JenkinsServer",
-                    "PublicIp"
-                  ]
-                },
-                "/job/{Config:ProjectName}"
-              ]
-            ]
-          },
-          "ExecutionUrlTemplate":{
-            "Fn::Join":[
-              "",
-              [
-                "http://",
-                {
-                  "Fn::GetAtt":[
-                    "JenkinsServer",
-                    "PublicIp"
-                  ]
-                },
-                "/job/{Config:ProjectName}/{ExternalExecutionId}"
-              ]
-            ]
-          }
-        }
-      }
-    },
-    "MyPipeline":{
+    "CodePipelineStack":{
       "Type":"AWS::CodePipeline::Pipeline",
-      "DependsOn":"CustomJenkinsActionType",
+      "DependsOn":[
+        "CodePipelineLambdaEcsFunction"
+      ],
       "Properties":{
-        "Name":{
+        "RoleArn":{
           "Fn::Join":[
             "",
             [
+              "arn:aws:iam::",
               {
-                "Ref":"AWS::StackName"
+                "Ref":"AWS::AccountId"
               },
-              "-Pipeline"
+              ":role/",
+              {
+                "Ref":"CodePipelineRole"
+              }
             ]
-          ]
-        },
-        "RoleArn":{
-          "Fn::GetAtt":[
-            "CodePipelineTrustRole",
-            "Arn"
           ]
         },
         "Stages":[
@@ -1663,128 +778,27 @@
             "Name":"Source",
             "Actions":[
               {
-                "Name":"ApplicationSource",
                 "InputArtifacts":[
 
                 ],
+                "Name":"Source",
                 "ActionTypeId":{
-                  "Version":"1",
                   "Category":"Source",
-                  "Owner":{
-                    "Fn::If":[
-                      "S3AsSource",
-                      "AWS",
-                      "ThirdParty"
-                    ]
-                  },
-                  "Provider":{
-                    "Fn::If":[
-                      "S3AsSource",
-                      "S3",
-                      "GitHub"
-                    ]
-                  }
-                },
-                "OutputArtifacts":[
-                  {
-                    "Name":{
-                      "Fn::Join":[
-                        "",
-                        [
-                          {
-                            "Ref":"AWS::StackName"
-                          },
-                          "-SourceArtifact"
-                        ]
-                      ]
-                    }
-                  }
-                ],
-                "Configuration":{
-                  "Fn::If":[
-                    "S3AsSource",
-                    {
-                      "S3Bucket":{
-                        "Ref":"S3ArtifactBucket"
-                      },
-                      "S3ObjectKey":{
-                        "Ref":"S3ArtifactObject"
-                      }
-                    },
-                    {
-                      "Owner":{
-                        "Ref":"GitHubUser"
-                      },
-                      "Repo":{
-                        "Ref":"GitHubRepoName"
-                      },
-                      "Branch":{
-                        "Ref":"GitHubBranchName"
-                      },
-                      "OAuthToken":{
-                        "Ref":"GitHubToken"
-                      }
-                    }
-                  ]
-                },
-                "RunOrder":1
-              }
-            ]
-          },
-          {
-            "Name":"Build",
-            "Actions":[
-              {
-                "Name":"ApplicationBuild",
-                "InputArtifacts":[
-                  {
-                    "Name":{
-                      "Fn::Join":[
-                        "",
-                        [
-                          {
-                            "Ref":"AWS::StackName"
-                          },
-                          "-SourceArtifact"
-                        ]
-                      ]
-                    }
-                  }
-                ],
-                "ActionTypeId":{
-                  "Category":"Build",
-                  "Owner":"Custom",
+                  "Owner":"AWS",
                   "Version":"1",
-                  "Provider":{
-                    "Fn::Join":[
-                      "",
-                      [
-                        {
-                          "Ref":"AWS::StackName"
-                        },
-                        "-Jenkins"
-                      ]
-                    ]
-                  }
+                  "Provider":"CodeCommit"
                 },
                 "OutputArtifacts":[
                   {
-                    "Name":{
-                      "Fn::Join":[
-                        "",
-                        [
-                          {
-                            "Ref":"AWS::StackName"
-                          },
-                          "-BuiltArtifact"
-                        ]
-                      ]
-                    }
+                    "Name":"MyApp"
                   }
                 ],
                 "Configuration":{
-                  "ProjectName":{
-                    "Ref":"AWS::StackName"
+                  "BranchName":{
+                    "Ref":"RepositoryBranch"
+                  },
+                  "RepositoryName":{
+                    "Ref":"RepositoryName"
                   }
                 },
                 "RunOrder":1
@@ -1795,72 +809,37 @@
             "Name":"Staging",
             "Actions":[
               {
-                "Name":"StagingDeploy",
                 "InputArtifacts":[
-                  {
-                    "Name":{
-                      "Fn::Join":[
-                        "",
-                        [
-                          {
-                            "Ref":"AWS::StackName"
-                          },
-                          "-BuiltArtifact"
-                        ]
-                      ]
-                    }
-                  }
+
                 ],
+                "Name":"DeployECS",
                 "ActionTypeId":{
-                  "Category":"Deploy",
+                  "Category":"Invoke",
                   "Owner":"AWS",
                   "Version":"1",
-                  "Provider":"CodeDeploy"
+                  "Provider":"Lambda"
                 },
-                "Configuration":{
-                  "ApplicationName":{
-                    "Ref":"MyApp"
-                  },
-                  "DeploymentGroupName":{
-                    "Ref":"DevDeploymentGroup"
-                  }
-                },
-                "RunOrder":1
-              }
-            ]
-          },
-          {
-            "Name":"Prod",
-            "Actions":[
-              {
-                "Name":"ProdDeploy",
-                "InputArtifacts":[
-                  {
-                    "Name":{
-                      "Fn::Join":[
-                        "",
-                        [
-                          {
-                            "Ref":"AWS::StackName"
-                          },
-                          "-BuiltArtifact"
-                        ]
-                      ]
-                    }
-                  }
+                "OutputArtifacts":[
+
                 ],
-                "ActionTypeId":{
-                  "Category":"Deploy",
-                  "Owner":"AWS",
-                  "Version":"1",
-                  "Provider":"CodeDeploy"
-                },
                 "Configuration":{
-                  "ApplicationName":{
-                    "Ref":"MyApp"
+                  "FunctionName":{
+                    "Ref":"CodePipelineLambdaEcsFunction"
                   },
-                  "DeploymentGroupName":{
-                    "Ref":"ProdDeploymentGroup"
+                  "UserParameters":{
+                    "Fn::Join":[
+                      "",
+                      [
+                        "imageversion=",
+                        {
+                          "Ref":"ImageTag"
+                        },
+                        "&stackname=",
+                        {
+                          "Ref":"AWS::StackName"
+                        }
+                      ]
+                    ]
                   }
                 },
                 "RunOrder":1
@@ -1874,17 +853,13 @@
             "Fn::Join":[
               "",
               [
-                "demo-",
+                "codepipeline-",
                 {
                   "Ref":"AWS::Region"
                 },
                 "-",
                 {
                   "Ref":"AWS::AccountId"
-                },
-                "-",
-                {
-                  "Ref":"AWS::StackName"
                 }
               ]
             ]
@@ -2453,7 +1428,7 @@
             },
             "#/view/",
             {
-              "Ref":"MyPipeline"
+              "Ref":"CodePipelineStack"
             }
           ]
         ]
@@ -2477,99 +1452,6 @@
         "Ref":"publicSubnet01"
       },
       "Description":"Public Subnet in AZ A"
-    },
-    "DevInstanceID":{
-      "Value":{
-        "Ref":"DevWebApp01"
-      },
-      "Description":"DevWebApp01 Instance ID"
-    },
-    "DevWebApp01PublicIP":{
-      "Value":{
-        "Fn::GetAtt":[
-          "DevWebApp01",
-          "PublicIp"
-        ]
-      },
-      "Description":"DevWebApp01 Public IP Address"
-    },
-    "ProdWebApp01InstanceID":{
-      "Value":{
-        "Ref":"ProdWebApp01"
-      },
-      "Description":"ProdWebApp01 Instance ID"
-    },
-    "ProdWebApp01PublicIP":{
-      "Value":{
-        "Fn::GetAtt":[
-          "ProdWebApp01",
-          "PublicIp"
-        ]
-      },
-      "Description":"ProdWebApp01 Public IP Address"
-    },
-    "JenkinsInstanceID":{
-      "Value":{
-        "Ref":"JenkinsServer"
-      },
-      "Description":"Jenkins Instance ID"
-    },
-    "JenkinsPublicIP":{
-      "Value":{
-        "Fn::GetAtt":[
-          "JenkinsServer",
-          "PublicIp"
-        ]
-      },
-      "Description":"Jenkins Public IP Address"
-    },
-    "AppSourceType":{
-      "Value":{
-        "Ref":"AppSourceType"
-      },
-      "Description":"The source type of the application"
-    },
-    "ApplicationSource":{
-      "Value":{
-        "Fn::If":[
-          "S3AsSource",
-          {
-            "Fn::Join":[
-              "",
-              [
-                "https://s3.amazonaws.com/",
-                {
-                  "Ref":"S3ArtifactBucket"
-                },
-                "/",
-                {
-                  "Ref":"S3ArtifactObject"
-                }
-              ]
-            ]
-          },
-          {
-            "Fn::Join":[
-              "",
-              [
-                "https://github.com/",
-                {
-                  "Ref":"GitHubUser"
-                },
-                "/",
-                {
-                  "Ref":"GitHubRepoName"
-                },
-                "/tree/",
-                {
-                  "Ref":"GitHubBranchName"
-                }
-              ]
-            ]
-          }
-        ]
-      },
-      "Description":"The source location of the application"
     },
     "SourceSecurityGroupId":{
       "Value":{

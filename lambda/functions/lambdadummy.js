@@ -1,5 +1,6 @@
 var assert = require('assert');
 var AWS = require('aws-sdk');
+var querystring  = require('querystring'); // for user parameters
 
 console.log('Loading function');
 
@@ -10,11 +11,13 @@ exports.handler = function(event, context) {
     // Retrieve the Job ID from the Lambda action
     var jobId = event["CodePipeline.job"].id;
 
-    //console.log('Received event:', JSON.stringify(event, null, 2));
-    console.log('value1 =', event.key1);
-    console.log('value2 =', event.key2);
-    console.log('value3 =', event.key3);
-        
+//    var imageVersion = event["CodePipeline.job"].data.actionConfiguration.configuration.UserParameters; 
+
+    var userParams = querystring.parse(event["CodePipeline.job"].data.actionConfiguration.configuration.UserParameters);
+
+    console.log('imageVersion =', userParams.imageversion);
+    console.log('stackname =', userParams.stackname);
+
     // Notify AWS CodePipeline of a successful job
     var putJobSuccess = function(message) {
         var params = {

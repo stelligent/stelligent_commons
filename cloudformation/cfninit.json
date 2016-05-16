@@ -9,12 +9,13 @@
     },
     "Branch":{
       "Type":"String",
+      "Default":"master",
       "Description":"The Github branch the public dromedary repository."
     },
     "InstanceType":{
       "Description":"WebServer EC2 instance type",
       "Type":"String",
-      "Default":"t2.medium",
+      "Default":"t2.nano",
       "AllowedValues":[
         "t1.micro",
         "t2.nano",
@@ -74,9 +75,8 @@
       "ConstraintDescription":"must be a valid EC2 instance type."
     },
     "KeyName":{
-      "Description":"Name of an existing EC2 KeyPair to enable SSH access to the instances",
-      "Type":"String",
-      "ConstraintDescription":"must be the name of an existing EC2 KeyPair."
+      "Type":"AWS::EC2::KeyPair::KeyName",
+      "Description":"Name of an existing EC2 KeyPair to enable SSH access to the ECS instances"
     },
     "SSHLocation":{
       "Description":"The IP address range that can be used to SSH to the EC2 instances",
