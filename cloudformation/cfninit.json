@@ -1,16 +1,31 @@
 {
   "AWSTemplateFormatVersion":"2010-09-09",
-  "Description":"AWS CloudFormation Sample Template CloudWatch_Logs: Provisions a minimal web application, and demonstrates how to stream the provisioning logs (cloud-init.log, cfn-init.log, cfn-hup.log, and cfn-wire.log) to CloudWatch Logs. This eliminates the need to SSH into an EC2 instance for debugging provisioning issues. Simply view the logs in the AWS CloudWatch console. **WARNING** You will be billed for the AWS resources if you create a stack from this template.",
+  "Description":"Master dromedary stack that calls nested stacks",
   "Parameters":{
-    "DromedaryRepo":{
+    "KeyName":{
+      "Description":"Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type":"AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription":"must be the name of an existing EC2 KeyPair."
+    },
+    "Repo":{
       "Type":"String",
-      "Description":"The Github https address to the public dromedary repository.",
-      "Default":"https://github.com/stelligent/dromedary.git"
+      "Description":"The name of the dromedary repository, not the URL",
+      "Default":"dromedary"
+    },
+    "GitHubToken":{
+      "NoEcho":"true",
+      "Type":"String",
+      "Description":"Secret. OAuthToken with access to Repo. Long string of characters and digits. Go to https://github.com/settings/tokens"
+    },
+    "GitHubUser":{
+      "Type":"String",
+      "Description":"GitHub UserName. This username must have access to the GitHubToken.",
+      "Default":"stelligent"
     },
     "Branch":{
       "Type":"String",
-      "Default":"master",
-      "Description":"The Github branch the public dromedary repository."
+      "Description":"The GitHub branch to the public Dromedary repository.",
+      "Default":"master"
     },
     "InstanceType":{
       "Description":"WebServer EC2 instance type",
@@ -73,10 +88,6 @@
         "cg1.4xlarge"
       ],
       "ConstraintDescription":"must be a valid EC2 instance type."
-    },
-    "KeyName":{
-      "Type":"AWS::EC2::KeyPair::KeyName",
-      "Description":"Name of an existing EC2 KeyPair to enable SSH access to the ECS instances"
     },
     "SSHLocation":{
       "Description":"The IP address range that can be used to SSH to the EC2 instances",
@@ -941,6 +952,37 @@
                   "Ref":"AWS::Region"
                 },
                 "\n",
+                "yum install -y git\n",
+                "git clone -b ",
+                {
+                  "Ref":"Branch"
+                },
+                " ",
+                {
+                  "Fn::Join":[
+                    "",
+                    [
+                      "https://github.com/",
+                      {
+                        "Ref":"GitHubUser"
+                      },
+                      "/",
+                      {
+                        "Ref":"Repo"
+                      },
+                      ".git"
+                    ]
+                  ]
+                },
+                " /opt/dromedary\n",
+                "export AWS_DEFAULT_REGION=",
+                {
+                  "Ref":"AWS::Region"
+                },
+                "\n",
+                "cd /opt/dromedary\n",
+                "./bin/configure-jenkins-2.sh ",
+                "\n",
                 "/opt/aws/bin/cfn-signal -e $? ",
                 "         --stack ",
                 {
@@ -951,37 +993,6 @@
                 {
                   "Ref":"AWS::Region"
                 },
-                "\n",
-                "yum install -y git\n",
-                "git clone -b ",
-                {
-                  "Ref":"Branch"
-                },
-                " ",
-                {
-                  "Ref":"DromedaryRepo"
-                },
-                " /opt/dromedary\n",
-                "export AWS_DEFAULT_REGION=",
-                {
-                  "Ref":"AWS::Region"
-                },
-                "\n",
-                "cd /opt/dromedary\n",
-                "./bin/test-jenkins-config.sh ",
-                {
-                  "Ref":"Branch"
-                },
-                " ",
-                {
-                  "Ref":"AWS::StackName"
-                },
-                " ",
-                {
-                  "Ref":"AWS::AccountId"
-                },
-                " ",
-                "2>&1 | tee ~/dromedarycommand.log",
                 "\n"
               ]
             ]
@@ -990,7 +1001,8 @@
       },
       "CreationPolicy":{
         "ResourceSignal":{
-          "Timeout":"PT15M"
+          "Count":1,
+          "Timeout":"PT10M"
         }
       }
     },
@@ -1014,31 +1026,13 @@
             "CidrIp":"0.0.0.0/0"
           }
         ]
-      },
-      "CreationPolicy":{
-        "ResourceSignal":{
-          "Count":1,
-          "Timeout":"PT5M"
-        }
       }
     }
   },
   "Outputs":{
-    "URL":{
-      "Description":"URL of the sample website",
+    "StackName":{
       "Value":{
-        "Fn::Join":[
-          "",
-          [
-            "http://",
-            {
-              "Fn::GetAtt":[
-                "WebServerInstance",
-                "PublicDnsName"
-              ]
-            }
-          ]
-        ]
+        "Ref":"AWS::StackName"
       }
     }
   }
