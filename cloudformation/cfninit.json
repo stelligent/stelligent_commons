@@ -10,7 +10,7 @@
     "Repo":{
       "Type":"String",
       "Description":"The name of the dromedary repository, not the URL",
-      "Default":"dromedary"
+      "Default":"stelligent_commons"
     },
     "GitHubToken":{
       "NoEcho":"true",
@@ -981,7 +981,7 @@
                 },
                 "\n",
                 "cd /opt/dromedary\n",
-                "./bin/configure-jenkins-2.sh ",
+                "./bina/configure-jenkins-2.sh ",
                 "\n",
                 "/opt/aws/bin/cfn-signal -e $? ",
                 "         --stack ",
