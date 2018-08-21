@@ -1,8 +1,0 @@
-source 'https://rubygems.org'
-
-gem 'berkshelf'
-
-group :test do
-  gem 'serverspec'
-  gem 'busser-serverspec'
-end

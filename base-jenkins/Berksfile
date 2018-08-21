@@ -1,6 +1,0 @@
-source 'https://api.berkshelf.com'
-
-cookbook 'jenkins'
-cookbook 'jenkins-configuration', :path => './site-cookbooks/jenkins-configuration'
-cookbook 'apache-configuration', :path => './site-cookbooks/apache-configuration'
-cookbook 'build-essential'
